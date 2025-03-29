@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Building, Unit, Company
+from .models import Building, Unit, Company, ODForm
 
 
 class BuildingSerializer(serializers.ModelSerializer):
@@ -24,4 +24,10 @@ class CompanySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Company
+        fields = '__all__'
+
+
+class ODFormSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ODForm
         fields = '__all__'

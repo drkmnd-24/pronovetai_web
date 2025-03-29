@@ -1,5 +1,45 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.contrib.auth.models import AbstractUser
+
+
+class User(AbstractUser):
+    USER_ROLE_CHOICES = [
+        ('admin', 'Admin'),
+        ('manager', 'Manager'),
+        ('user', 'User'),
+    ]
+    role = models.CharField(
+        max_length=20,
+        choices=USER_ROLE_CHOICES,
+        default='user',
+        help_text='Designated role: admin, manager or user'
+    )
+
+    def __str__(self):
+        return self.username
+
+
+class Contact(models.Model):
+    company = models.ForeignKey(
+        'Company',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name = 'contacts'
+    )
+    title = models.CharField(max_length=100, null=True, blank=True)
+    first_name = models.CharField(max_length=100, null=True, blank=True)
+    last_name = models.CharField(max_length=100, null=True, blank=True)
+    email = models.EmailField()
+    position = models.CharField(max_length=100, null=True, blank=True)
+    phone_number = models.CharField(max_length=20, null=True, blank=True)
+    mobile_number = models.CharField(max_length=20, null=True, blank=True)
+    fax_number = models.CharField(max_length=20, null=True, blank=True)
+    notes = models.TextField(null=True, blank=True)
+
+    def __str__(self):
+        return f'{self.first_name} {self.last_name}'
+
 
 class Building(models.Model):
     name = models.CharField(max_length=255)
@@ -97,3 +137,78 @@ class Company(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class ODForm(models.Model):
+    TYPE_OF_CALL_CHOICES = [
+        ('inbound', 'Inbound'),
+        ('outbound', 'Outbound'),
+    ]
+
+    SOURCE_OF_CALL_CHOICES = [
+        ('newspaper', 'Newspaper'),
+        ('old_client', 'Old Client'),
+        ('online_marketing', 'Online Marketing'),
+        ('referral', 'Referral'),
+        ('signage', 'Signage'),
+        ('website', 'Website'),
+        ('yellow_pages', 'Yellow Pages'),
+        ('others', 'Others'),
+    ]
+
+    TYPE_OF_CALLER_CHOICES = [
+        ('broker', 'Broker'),
+        ('direct', 'Direct Buyer / Lease'),
+    ]
+
+    INTENT_CHOICES = [
+        ('rent', 'To Rent'),
+        ('buy', 'To Buy'),
+        ('both', 'Both'),
+    ]
+
+    PURPOSE_CHOICES = [
+        ('expanding', 'Expanding'),
+        ('relocating', 'Relocating'),
+        ('new_office', 'New Office'),
+        ('consolidating', 'Consolidating'),
+        ('downsizing', 'Downsizing'),
+        ('upgrading', 'Upgrading'),
+        ('expanding_retaining', 'Expanding while retaining current office'),
+        ('others', 'Others'),
+    ]
+
+    STATUS_CHOICES = [
+        ('active', 'Active'),
+        ('inactive', 'Inactive'),
+        ('done_deal', 'Done Deal'),
+    ]
+    date = models.DateTimeField()
+    contact = models.ForeignKey('Contact', on_delete=models.SET_NULL, null=True, blank=True, related_name='od_forms')
+    call_taken_by = models.CharField(max_length=255, null=True, blank=True)
+    type_of_call = models.CharField(max_length=10, choices=TYPE_OF_CALL_CHOICES)
+    source_of_call = models.CharField(max_length=20, choices=SOURCE_OF_CALL_CHOICES)
+    type_of_caller = models.CharField(max_length=20, choices=TYPE_OF_CALLER_CHOICES)
+    intent = models.CharField(max_length=10, choices=INTENT_CHOICES)
+    purpose = models.CharField(max_length=30, choices=PURPOSE_CHOICES)
+    size_minimum = models.DecimalField(max_digits=10, decimal_places=2)
+    budget_minimum = models.DecimalField(max_digits=10, decimal_places=2)
+    prefered_location = models.CharField(max_length=100)
+    size_maximum = models.DecimalField(max_digits=10, decimal_places=2)
+    budget_maximum = models.DecimalField(max_digits=10, decimal_places=2)
+    started_scouting = models.BooleanField(default=False)
+    notes = models.TextField(blank=True, null=True)
+    account_manager = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        limit_choices_to={'is_staff': True},
+        related_name='od_forms'
+    )
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='active')
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'OD Form {self.id} - {self.contact}'
