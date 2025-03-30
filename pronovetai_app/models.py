@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.core.exceptions import ValidationError
+from django.utils.translation import gettext_lazy as _
 
 
 class User(AbstractUser):
@@ -41,9 +43,21 @@ class Contact(models.Model):
         return f'{self.first_name} {self.last_name}'
 
 
+class Address(models.Model):
+    street_address = models.CharField(max_length=255, blank=True, null=True)
+    barangay = models.CharField(max_length=100, blank=True, null=True)
+    city = models.CharField(max_length=100)
+
+
 class Building(models.Model):
     name = models.CharField(max_length=255)
-    address = models.CharField(max_length=255)
+    address = models.ForeignKey(
+        Address,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name='buildings'
+    )
     year_built = models.PositiveIntegerField()
     for_sale = models.BooleanField(default=False)
     peza_certified = models.BooleanField(default=False)
@@ -118,6 +132,14 @@ class Unit(models.Model):
     # Additional notes
     unit_notes = models.TextField(null=True, blank=True)
 
+    def clean(self):
+        if self.net_floor_area > self.gross_floor_area:
+            raise ValidationError(_('Net Floor area cannot be greater than gross floor area'))
+
+        if self.lease_commencement_date and self.lease_expiry_date:
+            if self.lease_commencement_date > self.lease_expiry_date:
+                raise ValidationError(_('Lease commencement date must be before lease expiry date'))
+
     def __str__(self):
         return f"{self.name} ({self.building.name})"
 
@@ -126,9 +148,13 @@ class Company(models.Model):
     name = models.CharField(max_length=255)
     # Related to building details
     building = models.ForeignKey(Building, on_delete=models.CASCADE, related_name='companies')
-    street_address = models.CharField(max_length=255)
-    barangay = models.CharField(max_length=100)
-    city = models.CharField(max_length=100)
+    address = models.ForeignKey(
+        Address,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name='companies'
+    )
     industry = models.CharField(max_length=100)
     # Affiliations
     building_affiliations = models.ManyToManyField(Building, related_name='affiliated_companies', blank=True)
@@ -208,7 +234,14 @@ class ODForm(models.Model):
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='active')
 
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def clean(self):
+        if self.size_minimum > self.size_maximum:
+            raise ValidationError(_('Size minimum cannot be greater than size maximum'))
+
+        if self.budget_minimum > self.budget_maximum:
+            raise ValidationError(_('Budget minimum cannot be greater than budget maximum'))
 
     def __str__(self):
         return f'OD Form {self.id} - {self.contact}'
