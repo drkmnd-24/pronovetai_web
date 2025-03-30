@@ -1,11 +1,23 @@
-from rest_framework import viewsets
+from rest_framework import viewsets, generics, permissions
 from .models import (Address, User, Company, Contact, Building, Unit, ODForm,
                      BuildingImage, UnitImage)
 from .serializers import (
     AddressSerializer, UserSerializer, CompanySerializer, ContactSerializer,
     BuildingSerializer, UnitSerializer, ODFormSerializer, BuildingImageSerializer,
-    UnitImageSerializer
+    UnitImageSerializer, StaffRegistrationSerializer, ManagerRegistrationSerializer
 )
+
+
+class StaffRegistrationView(generics.CreateAPIView):
+    queryset = User.objects.all()
+    serializer_class = StaffRegistrationSerializer
+    permission_classes = [permissions.IsAdminUser]
+
+
+class ManagerRegistrationView(generics.CreateAPIView):
+    queryset = User.objects.all()
+    serializer_class = ManagerRegistrationSerializer
+    permission_classes = [permissions.IsAdminUser]
 
 
 class AddressViewSet(viewsets.ModelViewSet):

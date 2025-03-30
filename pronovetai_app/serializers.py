@@ -4,6 +4,62 @@ from .models import (Address, User, Company,
                      ODForm, BuildingImage, UnitImage)
 
 
+class StaffRegistrationSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, required=True)
+    confirm_password = serializers.CharField(write_only=True, required=True)
+
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'first_name', 'last_name', 'password', 'confirm_password']
+
+    def validate(self, data):
+        if data['password'] != data['confirm_password']:
+            raise serializers.ValidationError('Password do not match')
+        return data
+
+    def create(self, validated_data):
+        validated_data.pop('confirm_password')
+        user = User(
+            username=validated_data['username'],
+            email=validated_data['email'],
+            first_name=validated_data.get('first_name', ''),
+            last_name=validated_data.get('last_name', ''),
+            role='user'
+        )
+        user.set_password(validated_data['password'])
+        user.is_staff = True
+        user.save()
+        return user
+
+
+class ManagerRegistrationSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, required=True)
+    confirm_password = serializers.CharField(write_only=True, required=True)
+
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'first_name', 'last_name', 'password', 'confirm_password']
+
+    def validate(self, data):
+        if data['password'] != data['confirm_password']:
+            raise serializers.ValidationError('Password do not match')
+        return data
+
+    def create(self, validated_data):
+        validated_data.pop('confirm_password')
+        user = User(
+            username=validated_data['username'],
+            email=validated_data['email'],
+            first_name=validated_data.get('first_name', ''),
+            last_name=validated_data.get('last_name', ''),
+            role='manager'
+        )
+        user.set_password(validated_data['password'])
+        user.is_staff = True
+        user.save()
+        return user
+
+
 class AddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = Address

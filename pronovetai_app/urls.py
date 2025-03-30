@@ -8,7 +8,7 @@ from rest_framework_simplejwt.views import (TokenObtainPairView, TokenRefreshVie
 from pronovetai_app.views import (
     AddressViewSet, UserViewSet, CompanyViewSet, ContactViewSet,
     BuildingViewSet, UnitViewSet, ODFormViewSet, BuildingImageViewSet,
-    UnitImageViewSet
+    UnitImageViewSet, StaffRegistrationView, ManagerRegistrationView
 )
 
 router = routers.DefaultRouter()
@@ -25,6 +25,9 @@ router.register(r'unit-images', UnitImageViewSet)
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include(router.urls)),
+
+    path('api/register/staff', StaffRegistrationView.as_view(), name='staff_registration'),
+    path('api/register/manager', ManagerRegistrationView.as_view(), name='manager_registration'),
 
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh', TokenRefreshView.as_view(), name='token_refresh'),
