@@ -1,6 +1,29 @@
 from rest_framework import viewsets
-from .models import Building, Unit, Company
-from .serializers import BuildingSerializer, UnitSerializer, CompanySerializer
+from .models import Address, User, Company, Contact, Building, Unit, ODForm
+from .serializers import (
+    AddressSerializer, UserSerializer, CompanySerializer, ContactSerializer,
+    BuildingSerializer, UnitSerializer, ODFormSerializer
+)
+
+
+class AddressViewSet(viewsets.ModelViewSet):
+    queryset = Address.objects.all()
+    serializer_class = AddressSerializer
+
+
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
+
+class CompanyViewSet(viewsets.ModelViewSet):
+    queryset = Company.objects.all()
+    serializer_class = CompanySerializer
+
+
+class ContactViewSet(viewsets.ModelViewSet):
+    queryset = Contact.objects.all()
+    serializer_class = ContactSerializer
 
 
 class BuildingViewSet(viewsets.ModelViewSet):
@@ -13,6 +36,6 @@ class UnitViewSet(viewsets.ModelViewSet):
     serializer_class = UnitSerializer
 
 
-class CompanyViewSet(viewsets.ModelViewSet):
-    queryset = Company.objects.all()
-    serializer_class = CompanySerializer
+class ODFormViewSet(viewsets.ModelViewSet):
+    queryset = ODForm.objects.all()
+    serializer_class = ODFormSerializer
