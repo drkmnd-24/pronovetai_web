@@ -4,6 +4,12 @@ from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
 
+def validated_image_size(image):
+    max_size = 5 * 1024 * 1024
+    if image.size > max_size:
+        raise ValidationError(_('Maximum file size allowed is 5MB'))
+
+
 class User(AbstractUser):
     USER_ROLE_CHOICES = [
         ('admin', 'Admin'),
@@ -245,3 +251,27 @@ class ODForm(models.Model):
 
     def __str__(self):
         return f'OD Form {self.id} - {self.contact}'
+
+
+class BuildingImage(models.Model):
+    building = models.ForeignKey(Building, on_delete=models.CASCADE, related_name='images')
+    image = models.ImageField(upload_to='building_images/', validators=[validated_image_size])
+
+    def clean(self):
+        if self.building and not self.pk and self.building.images.count() >= 3:
+            raise ValidationError(_('Maximum of 3 images allowed per building'))
+
+    def __str__(self):
+        return f'Image for {self.building.name}'
+
+
+class UnitImage(models.Model):
+    unit = models.ForeignKey(Unit, on_delete=models.CASCADE, related_name='images')
+    image = models.ImageField(upload_to='unit_images/', validators=[validated_image_size])
+
+    def clean(self):
+        if self.unit and not self.pk and self.unit.images.count() >= 3:
+            raise ValidationError(_('Maximum of 3 images allowed per building'))
+
+    def __str__(self):
+        return f'Image for {self.unit.name}'

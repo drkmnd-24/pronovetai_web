@@ -1,5 +1,7 @@
 from rest_framework import serializers
-from .models import (Address, User, Company, Contact, Building, Unit, ODForm)
+from .models import (Address, User, Company,
+                     Contact, Building, Unit,
+                     ODForm, BuildingImage, UnitImage)
 
 
 class AddressSerializer(serializers.ModelSerializer):
@@ -96,3 +98,15 @@ class ODFormSerializer(serializers.ModelSerializer):
         instance = ODForm(**data)
         instance.clean()
         return data
+
+
+class BuildingImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BuildingImage
+        fields = '__all__'
+
+
+class UnitImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UnitImage
+        fields = '__all__'
