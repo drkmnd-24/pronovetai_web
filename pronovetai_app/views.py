@@ -1,4 +1,7 @@
 from rest_framework import viewsets, generics, permissions
+
+from rest_framework.permissions import AllowAny
+
 from .models import (Address, User, Company, Contact, Building, Unit, ODForm,
                      BuildingImage, UnitImage)
 from .serializers import (
@@ -11,7 +14,7 @@ from .serializers import (
 class StaffRegistrationView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = StaffRegistrationSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [permissions.AllowAny]
 
 
 class ManagerRegistrationView(generics.CreateAPIView):
