@@ -1,6 +1,8 @@
 import React, {useState} from "react";
+import { useNavigate } from "react-router-dom";
 
 const StaffRegistration = () => {
+    const navigate = useNavigate();
     const [formData, setFormData] = useState ({
         username: '',
         email: '',
@@ -43,6 +45,7 @@ const StaffRegistration = () => {
                     password: '',
                     confirm_password: ''
                 });
+                navigate('/login');
             } else {
                 setError(data.detail || 'Registration failed');
             }
@@ -50,6 +53,10 @@ const StaffRegistration = () => {
             setError('An error occurred, please try again');
         }
     };
+
+    const handleCancel = () => {
+        navigate('/login');
+    }
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-100">
@@ -134,6 +141,14 @@ const StaffRegistration = () => {
                         Register Staff
                       </button>
                 </form>
+                <div className="mt-4 text-center">
+                    <button
+                        onClick={handleCancel}
+                        className="w-full bg-gray-500 text-white py-2 rounded hover:bg-gray-600"
+                        >
+                        Cancel
+                    </button>
+                </div>
             </div>
         </div>
     );
