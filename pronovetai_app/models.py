@@ -54,6 +54,9 @@ class Address(models.Model):
     barangay = models.CharField(max_length=100, blank=True, null=True)
     city = models.CharField(max_length=100)
 
+    def __str__(self):
+        return f'{self.street_address} - {self.city}'
+
 
 class Building(models.Model):
     name = models.CharField(max_length=255)
