@@ -32,7 +32,7 @@ const UnitsList = () => {
         <div>
             <TopNav />
             <div className="p-4">
-                <h1 className="text-2xl front-bold mb-4">Units</h1>
+                <h1 className="text-2xl font-bold mb-4">Units</h1>
                 <ul>
                     {units.map((u) => (
                         <li key={u.id} className="mb-2">

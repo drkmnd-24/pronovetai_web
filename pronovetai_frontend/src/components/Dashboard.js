@@ -1,4 +1,3 @@
-// src/components/Dashboard.js
 import React, { useEffect, useState } from "react";
 import { Bar } from "react-chartjs-2";
 import TopNav from "./TopNav";
@@ -12,7 +11,7 @@ import {
   Legend
 } from "chart.js";
 
-// Register required chart components
+// Register the required chart components
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 const Dashboard = () => {
@@ -93,6 +92,7 @@ const Dashboard = () => {
     return <div className="p-8 text-center">Loading dashboard...</div>;
   }
 
+  // Calculate available vacant units per building
   const buildingVacancy = buildings.map((building) => {
     const vacantCount = units.filter(
       (unit) => unit.building === building.id && unit.vacancy_status === "vacant"
@@ -100,6 +100,7 @@ const Dashboard = () => {
     return { ...building, vacantCount };
   });
 
+  // Calculate leases expiring within the next 30 days
   const today = new Date();
   const expiringLeases = units.filter((unit) => {
     if (!unit.lease_expiry_date) return false;
@@ -108,6 +109,7 @@ const Dashboard = () => {
     return diffDays >= 0 && diffDays <= 30;
   });
 
+  // Count OD forms by status
   const odStatusCounts = odForms.reduce((acc, od) => {
     const status = od.status;
     acc[status] = (acc[status] || 0) + 1;
@@ -132,74 +134,62 @@ const Dashboard = () => {
   return (
     <div>
       <TopNav />
-      <div className="p-8">
-        <h1 className="text-3xl font-bold mb-6">Dashboard Overview</h1>
-        {/* Buildings Section */}
-        <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4">
-            Buildings - Available Vacant Units
-          </h2>
-          {buildingVacancy.length === 0 ? (
-            <p>No buildings found.</p>
-          ) : (
-            <ul>
-              {buildingVacancy.map((building) => (
-                <li key={building.id} className="mb-2">
-                  <strong>{building.name}</strong> - Vacant Units:{" "}
-                  {building.vacantCount}
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-
-        {/* Expiring Leases Section */}
-        <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4">
-            Leases Expiring Soon
-          </h2>
-          {expiringLeases.length === 0 ? (
-            <p>No leases expiring within the next 30 days.</p>
-          ) : (
-            <ul>
-              {expiringLeases.map((unit) => (
-                <li key={unit.id} className="mb-2">
-                  <strong>{unit.name}</strong> (Building ID: {unit.building}) -
-                  Lease Expiry: {unit.lease_expiry_date}
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-
-        {/* OD Forms Section */}
-        <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4">
-            Office Demand (OD) Overview
-          </h2>
-          {odForms.length === 0 ? (
-            <p>No office demand records.</p>
-          ) : (
-            <ul>
-              {odForms.map((od) => (
-                <li key={od.id} className="mb-2">
-                  <strong>ID:</strong> {od.id} - <strong>Status:</strong>{" "}
-                  {od.status} - <strong>Intent:</strong> {od.intent}
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-
-        {/* OD Forms Graph Section */}
-        <section>
-          <h2 className="text-2xl font-semibold mb-4">
-            OD Forms Status Chart
-          </h2>
-          <div className="w-full max-w-md">
-            <Bar data={chartData} />
+      <div className="container mx-auto p-4">
+        <h1 className="text-3xl font-bold mb-6 text-center">Dashboard Overview</h1>
+        {/* Grid container for the first row (Buildings & Expiring Leases) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="bg-white p-4 rounded shadow">
+            <h2 className="text-2xl font-semibold mb-4">Buildings</h2>
+            {buildingVacancy.length === 0 ? (
+              <p>No buildings found.</p>
+            ) : (
+              <ul>
+                {buildingVacancy.map((building) => (
+                  <li key={building.id} className="mb-2">
+                    <strong>{building.name}</strong> - Vacant Units: {building.vacantCount}
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
-        </section>
+          <div className="bg-white p-4 rounded shadow">
+            <h2 className="text-2xl font-semibold mb-4">Expiring Leases</h2>
+            {expiringLeases.length === 0 ? (
+              <p>No leases expiring within the next 30 days.</p>
+            ) : (
+              <ul>
+                {expiringLeases.map((unit) => (
+                  <li key={unit.id} className="mb-2">
+                    <strong>{unit.name}</strong> (Building ID: {unit.building}) - Lease Expiry: {unit.lease_expiry_date}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+        {/* Grid container for the second row (OD Forms Overview & Chart) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+          <div className="bg-white p-4 rounded shadow">
+            <h2 className="text-2xl font-semibold mb-4">Office Demand (OD) Forms</h2>
+            {odForms.length === 0 ? (
+              <p>No office demand records.</p>
+            ) : (
+              <ul>
+                {odForms.map((od) => (
+                  <li key={od.id} className="mb-2">
+                    <strong>ID:</strong> {od.id} - <strong>Status:</strong> {od.status} - <strong>Intent:</strong> {od.intent}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+          <div className="bg-white p-4 rounded shadow flex flex-col items-center">
+            <h2 className="text-2xl font-semibold mb-4">OD Forms Status Chart</h2>
+            <div className="w-full max-w-md">
+              <Bar data={chartData} />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
