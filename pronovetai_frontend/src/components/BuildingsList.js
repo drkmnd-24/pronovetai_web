@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from "react";
 import TopNav from "./TopNav";
 
-const UnitList = () => {
-    const [units, setUnits] = useState([]);
+
+const BuildingsList = () => {
+    const [buildings, setBuildings] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
 
     useEffect(() => {
         const token = localStorage.getItem("accessToken");
-        fetch("http://127.0.0.1:8000/api/units/", {
+        fetch("http://127.0.0.1:8000/api/buildings/", {
             headers: {
                 "Content-Type": "application/json",
                 Authorization: `Bearer ${token}`
@@ -16,11 +17,11 @@ const UnitList = () => {
         })
             .then((res) => res.json())
             .then((data) => {
-                setUnits(data);
+                setBuildings(data);
                 setLoading(false);
             })
             .catch((err) => {
-                setError("Error fetching units");
+                setError("Error fetching buildings");
                 setLoading(false);
             });
     }, []);
@@ -32,11 +33,11 @@ const UnitList = () => {
         <div>
             <TopNav />
             <div className="p-4">
-                <h1 className="text-2xl front-bold mb-4">Units</h1>
+                <h1 className="text-2xl font-bold mb-4">Buildings</h1>
                 <ul>
-                    {units.map((u) => (
-                        <li key={u.id} className="mb-2">
-                            {u.name} - Building ID: {u.building}
+                    {buildings.map((b) => (
+                        <li key={b.id} className="mb-2">
+                            {b.name} - {b.address ? b.address.street_address: "No address"}
                         </li>
                     ))}
                 </ul>
@@ -45,4 +46,5 @@ const UnitList = () => {
     );
 };
 
-export default UnitList;
+
+export default BuildingsList;
