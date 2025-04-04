@@ -61,15 +61,15 @@ class Address(models.Model):
 class Building(models.Model):
     name = models.CharField(max_length=255)
     address = models.ForeignKey(
-        Address,
+        'Address',
         on_delete=models.SET_NULL,
         blank=True,
         null=True,
         related_name='buildings'
     )
     year_built = models.PositiveIntegerField()
-    for_sale = models.BooleanField(default=False)
-    peza_certified = models.BooleanField(default=False)
+    is_for_sale = models.BooleanField(default=False)
+    is_peza_certified = models.BooleanField(default=False)
     is_strata = models.BooleanField(default=False)
     grade = models.CharField(max_length=50)
     typical_floor_plate_area = models.DecimalField(max_digits=10, decimal_places=2)
@@ -89,6 +89,20 @@ class Building(models.Model):
     space_for_lease = models.DecimalField(max_digits=10, decimal_places=2)
     space_for_sale = models.DecimalField(max_digits=10, decimal_places=2)
     space_occupied = models.DecimalField(max_digits=10, decimal_places=2)
+
+    # New Contact Information fields
+    contact_name = models.CharField(max_length=255, blank=True, null=True)
+    CONTACT_TYPE_CHOICES = [
+        ('property_manager', 'Property Manager'),
+        ('tenant', 'Tenant'),
+        ('agent', 'Agent'),
+        ('owner', 'Owner'),
+        ('owner_representative', 'Owner Representative'),
+        ('pta', 'PTA'),
+        ('others', 'Others'),
+    ]
+    contact_type = models.CharField(max_length=50, choices=CONTACT_TYPE_CHOICES, blank=True, null=True)
+
     # Log fields
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='buildings_created')
     created_at = models.DateTimeField(auto_now_add=True)
