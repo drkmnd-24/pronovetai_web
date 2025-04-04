@@ -27,6 +27,7 @@ class User(AbstractUser):
         return self.username
 
 
+# CONTACT MODEL
 class Contact(models.Model):
     company = models.ForeignKey(
         'Company',
@@ -44,11 +45,27 @@ class Contact(models.Model):
     mobile_number = models.CharField(max_length=20, null=True, blank=True)
     fax_number = models.CharField(max_length=20, null=True, blank=True)
     notes = models.TextField(null=True, blank=True)
+    # New field for contact type with the provided choices.
+    CONTACT_TYPE_CHOICES = [
+        ('property_manager', 'Property Manager'),
+        ('tenant', 'Tenant'),
+        ('agent', 'Agent'),
+        ('owner', 'Owner'),
+        ('owner_representative', 'Owner Representative'),
+        ('pta', 'PTA'),
+        ('others', 'Others'),
+    ]
+    contact_type = models.CharField(
+        max_length=50,
+        choices=CONTACT_TYPE_CHOICES,
+        blank=True,
+        null=True
+    )
 
     def __str__(self):
-        # Return full name if available, else email.
+        # Return full name if provided, otherwise email.
         if self.first_name or self.last_name:
-            return f'{self.first_name} {self.last_name}'.strip()
+            return f"{self.first_name} {self.last_name}".strip()
         return self.email
 
 
@@ -93,7 +110,7 @@ class Building(models.Model):
     space_for_sale = models.DecimalField(max_digits=10, decimal_places=2)
     space_occupied = models.DecimalField(max_digits=10, decimal_places=2)
 
-    # New: Relationship to Contact(s). A building can have multiple contacts.
+    # Instead of separate contact fields, we associate contacts via a ManyToMany field.
     contacts = models.ManyToManyField('Contact', blank=True, related_name='buildings')
 
     # Log fields
@@ -167,20 +184,30 @@ class Unit(models.Model):
 
 class Company(models.Model):
     name = models.CharField(max_length=255)
-    # Related to building details
-    building = models.ForeignKey(Building, on_delete=models.CASCADE, related_name='companies')
+    # Relate a company to a building (if applicable) via a ForeignKey.
+    building = models.ForeignKey(
+        Building,
+        on_delete=models.CASCADE,
+        related_name='companies'
+    )
     address = models.ForeignKey(
-        Address,
+        'Address',
         on_delete=models.SET_NULL,
         blank=True,
         null=True,
         related_name='companies'
     )
     industry = models.CharField(max_length=100)
-    # Affiliations
-    building_affiliations = models.ManyToManyField(Building, related_name='affiliated_companies', blank=True)
-    unit_affiliations = models.ManyToManyField(Unit, related_name='affiliated_companies', blank=True)
-    contact = models.CharField(max_length=255)
+    building_affiliations = models.ManyToManyField(
+        Building,
+        related_name='affiliated_companies',
+        blank=True
+    )
+    unit_affiliations = models.ManyToManyField(
+        'Unit',
+        related_name='affiliated_companies',
+        blank=True
+    )
 
     def __str__(self):
         return self.name

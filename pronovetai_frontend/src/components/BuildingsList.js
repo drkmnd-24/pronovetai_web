@@ -1,4 +1,3 @@
-// src/components/BuildingsList.js
 import React, { useEffect, useState } from "react";
 import TopNav from "./TopNav";
 
@@ -6,12 +5,26 @@ const BuildingsList = () => {
   const [buildings, setBuildings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  // Pagination state
+
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
-  // Sorting state: sortKey can be 'name', 'building_type', or 'owner'
+
   const [sortKey, setSortKey] = useState("");
   const [sortDirection, setSortDirection] = useState("asc");
+
+  const getContactName = (building) => {
+    if (building.contacts && building.contacts.length > 0) {
+      const ownerContact = building.contacts.find(
+        (c) => c.contact_type === "owner"
+      );
+      if (ownerContact) {
+        return `${ownerContact.first_name || ""} ${ownerContact.last_name || ""}`.trim();
+      }
+      const firstContact = building.contacts[0];
+      return `${firstContact.first_name || ""} ${firstContact.last_name || ""}`.trim();
+    }
+    return "N/A";
+  };
 
   // Fetch buildings data
   useEffect(() => {
@@ -33,9 +46,8 @@ const BuildingsList = () => {
       });
   }, []);
 
-  // Function to handle sorting when a sortable header is clicked
+  // Function to handle sorting when a header is clicked.
   const handleSort = (key) => {
-    // Toggle sort direction if clicking same key; otherwise set to ascending.
     if (sortKey === key) {
       setSortDirection(sortDirection === "asc" ? "desc" : "asc");
     } else {
@@ -44,22 +56,21 @@ const BuildingsList = () => {
     }
   };
 
-  // Sort buildings array based on sortKey and sortDirection.
+  // Sorting logic for buildings array.
   const sortedBuildings = [...buildings].sort((a, b) => {
-    let aVal, bVal;
-    // Determine the value based on key
+    let aVal = "";
+    let bVal = "";
+
     if (sortKey === "name") {
       aVal = a.name.toLowerCase();
       bVal = b.name.toLowerCase();
     } else if (sortKey === "building_type") {
       aVal = a.building_type.toLowerCase();
       bVal = b.building_type.toLowerCase();
-    } else if (sortKey === "owner") {
-      // Use created_by.username if available; otherwise empty string.
-      aVal = a.created_by ? a.created_by.username.toLowerCase() : "";
-      bVal = b.created_by ? b.created_by.username.toLowerCase() : "";
+    } else if (sortKey === "contact") {
+      aVal = getContactName(a).toLowerCase();
+      bVal = getContactName(b).toLowerCase();
     } else {
-      // If no sort key is set, keep original order.
       return 0;
     }
 
@@ -68,13 +79,12 @@ const BuildingsList = () => {
     return 0;
   });
 
-  // Compute pagination: get current page items
+  // Pagination: determine current page items
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentBuildings = sortedBuildings.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(sortedBuildings.length / itemsPerPage);
 
-  // Pagination functions
   const nextPage = () => {
     if (currentPage < totalPages) setCurrentPage(currentPage + 1);
   };
@@ -82,12 +92,8 @@ const BuildingsList = () => {
     if (currentPage > 1) setCurrentPage(currentPage - 1);
   };
 
-  if (loading)
-    return <div className="container mx-auto p-4">Loading...</div>;
-  if (error)
-    return (
-      <div className="container mx-auto p-4 text-red-600">{error}</div>
-    );
+  if (loading) return <div className="container mx-auto p-4">Loading...</div>;
+  if (error) return <div className="container mx-auto p-4 text-red-600">{error}</div>;
 
   return (
     <div>
@@ -112,11 +118,13 @@ const BuildingsList = () => {
               </th>
               <th
                 className="py-2 px-4 border cursor-pointer"
-                onClick={() => handleSort("owner")}
+                onClick={() => handleSort("contact")}
               >
-                Building Owner {sortKey === "owner" ? (sortDirection === "asc" ? "▲" : "▼") : ""}
+                Contact Person {sortKey === "contact" ? (sortDirection === "asc" ? "▲" : "▼") : ""}
               </th>
-              <th className="py-2 px-4 border">No. of Floors</th>
+              <th className="py-2 px-4 border">Grade</th>
+              <th className="py-2 px-4 border">PEZA Certified</th>
+              <th className="py-2 px-4 border">Strata</th>
             </tr>
           </thead>
           <tbody>
@@ -129,15 +137,14 @@ const BuildingsList = () => {
                     : "No address"}
                 </td>
                 <td className="py-2 px-4 border">{b.building_type}</td>
-                <td className="py-2 px-4 border">
-                  {b.created_by ? b.created_by.username : "N/A"}
-                </td>
-                <td className="py-2 px-4 border">{b.number_of_floors}</td>
+                <td className="py-2 px-4 border">{getContactName(b)}</td>
+                <td className="py-2 px-4 border">{b.grade}</td>
+                <td className="py-2 px-4 border">{b.is_peza_certified ? "Yes" : "No"}</td>
+                <td className="py-2 px-4 border">{b.is_strata ? "Yes" : "No"}</td>
               </tr>
             ))}
           </tbody>
         </table>
-        {/* Pagination controls */}
         <div className="flex justify-between items-center mt-4">
           <button
             onClick={prevPage}
