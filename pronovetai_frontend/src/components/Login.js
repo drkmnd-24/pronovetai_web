@@ -1,8 +1,9 @@
 // src/components/Login.js
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const Login = () => {
+  const navigate = useNavigate();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -11,7 +12,7 @@ const Login = () => {
     e.preventDefault();
 
     try {
-      const response = await fetch('http://localhost:8000/api/token/', {
+      const response = await fetch('http://127.0.0.1:8000/api/token/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -22,11 +23,10 @@ const Login = () => {
       const data = await response.json();
 
       if (response.ok) {
-        // Save the access token (and optionally the refresh token)
+        // Save the access token and username in localStorage
         localStorage.setItem('accessToken', data.access);
-        // localStorage.setItem('refreshToken', data.refresh);
-        // Redirect to a protected page (e.g., dashboard)
-        window.location.href = '/dashboard';
+        localStorage.setItem('username', username);
+        navigate('/dashboard');
       } else {
         setError(data.detail || 'Invalid credentials. Please try again.');
       }
