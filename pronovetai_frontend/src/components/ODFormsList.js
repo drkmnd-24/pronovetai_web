@@ -26,13 +26,13 @@ const ODFormsList = () => {
       });
   }, []);
 
-  if (loading) return <div className="p-4">Loading...</div>;
-  if (error) return <div className="p-4 text-red-600">{error}</div>;
+  if (loading) return <div className="container mx-auto p-4">Loading...</div>;
+  if (error) return <div className="container mx-auto p-4 text-red-600">{error}</div>;
 
   return (
     <div>
       <TopNav />
-      <div className="p-4">
+      <div className="container mx-auto p-4">
         <h1 className="text-2xl font-bold mb-4">OD Forms</h1>
         <ul>
           {odForms.map((od) => (
