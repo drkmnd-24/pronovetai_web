@@ -33,7 +33,7 @@ class Contact(models.Model):
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name = 'contacts'
+        related_name='contacts'
     )
     title = models.CharField(max_length=100, null=True, blank=True)
     first_name = models.CharField(max_length=100, null=True, blank=True)
@@ -46,7 +46,10 @@ class Contact(models.Model):
     notes = models.TextField(null=True, blank=True)
 
     def __str__(self):
-        return f'{self.first_name} {self.last_name}'
+        # Return full name if available, else email.
+        if self.first_name or self.last_name:
+            return f'{self.first_name} {self.last_name}'.strip()
+        return self.email
 
 
 class Address(models.Model):
@@ -90,21 +93,16 @@ class Building(models.Model):
     space_for_sale = models.DecimalField(max_digits=10, decimal_places=2)
     space_occupied = models.DecimalField(max_digits=10, decimal_places=2)
 
-    # New Contact Information fields
-    contact_name = models.CharField(max_length=255, blank=True, null=True)
-    CONTACT_TYPE_CHOICES = [
-        ('property_manager', 'Property Manager'),
-        ('tenant', 'Tenant'),
-        ('agent', 'Agent'),
-        ('owner', 'Owner'),
-        ('owner_representative', 'Owner Representative'),
-        ('pta', 'PTA'),
-        ('others', 'Others'),
-    ]
-    contact_type = models.CharField(max_length=50, choices=CONTACT_TYPE_CHOICES, blank=True, null=True)
+    # New: Relationship to Contact(s). A building can have multiple contacts.
+    contacts = models.ManyToManyField('Contact', blank=True, related_name='buildings')
 
     # Log fields
-    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='buildings_created')
+    created_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='buildings_created'
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     last_edited = models.DateTimeField(auto_now=True)
 
