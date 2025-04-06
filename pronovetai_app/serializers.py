@@ -1,7 +1,10 @@
 from rest_framework import serializers
+
+from django.contrib.auth import password_validation
+
 from .models import (Address, User, Company,
                      Contact, Building, Unit,
-                     ODForm, BuildingImage, UnitImage)
+                     ODForm, BuildingImage, UnitImage, UserLog)
 
 
 class StaffRegistrationSerializer(serializers.ModelSerializer):
@@ -70,6 +73,25 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username', 'email', 'first_name', 'last_name', 'role']
+
+
+class UserLogSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserLog
+        fields = ['id', 'message', 'timestamp']
+
+
+class ChangePasswordSerializer(serializers.ModelSerializer):
+    new_password = serializers.CharField(write_only=True, required=True)
+
+    def validate_new_password(self, value):
+        password_validation.validate_password(value)
+        return value
+
+    def update(self, instance, validated_data):
+        instance.set_password(validated_data['new_password'])
+        instance.save()
+        return instance
 
 
 class CompanySerializer(serializers.ModelSerializer):
