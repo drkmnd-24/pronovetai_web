@@ -1,9 +1,9 @@
 from rest_framework import viewsets, generics, permissions
-
 from rest_framework.permissions import AllowAny
-
-from .models import (Address, User, Company, Contact, Building, Unit, ODForm,
-                     BuildingImage, UnitImage)
+from .models import (
+    Address, User, Company, Contact, Building, Unit, ODForm,
+    BuildingImage, UnitImage
+)
 from .serializers import (
     AddressSerializer, UserSerializer, CompanySerializer, ContactSerializer,
     BuildingSerializer, UnitSerializer, ODFormSerializer, BuildingImageSerializer,
@@ -28,9 +28,13 @@ class AddressViewSet(viewsets.ModelViewSet):
     serializer_class = AddressSerializer
 
 
-class UserViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all()
+# This view is used to get the current logged-in user's data.
+class UserViewSet(generics.RetrieveAPIView):
     serializer_class = UserSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_object(self):
+        return self.request.user
 
 
 class CompanyViewSet(viewsets.ModelViewSet):

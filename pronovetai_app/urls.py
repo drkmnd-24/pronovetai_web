@@ -1,10 +1,7 @@
 from django.contrib import admin
 from django.urls import path, include
-
 from rest_framework import routers
-
-from rest_framework_simplejwt.views import (TokenObtainPairView, TokenRefreshView,)
-
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from pronovetai_app.views import (
     AddressViewSet, UserViewSet, CompanyViewSet, ContactViewSet,
     BuildingViewSet, UnitViewSet, ODFormViewSet, BuildingImageViewSet,
@@ -13,7 +10,6 @@ from pronovetai_app.views import (
 
 router = routers.DefaultRouter()
 router.register(r'addresses', AddressViewSet)
-router.register(r'users', UserViewSet)
 router.register(r'companies', CompanyViewSet)
 router.register(r'contacts', ContactViewSet)
 router.register(r'buildings', BuildingViewSet)
@@ -31,4 +27,6 @@ urlpatterns = [
 
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh', TokenRefreshView.as_view(), name='token_refresh'),
+
+    path('api/users/me/', UserViewSet.as_view(), name='current_user'),
 ]
