@@ -10,6 +10,7 @@ import UnitsList from "./components/UnitsList";
 import CompaniesList from "./components/CompaniesList";
 import ContactsList from "./components/ContactsList";
 import ODFormsList from "./components/ODFormsList";
+import Profile from "./components/Profile";
 import './App.css';
 
 function App() {
@@ -20,6 +21,7 @@ function App() {
         <Route path="/register/staff" element={<StaffRegistration />} />
         <Route path="/register/manager" element={<ManagerRegistration />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/profile" element={<Profile />} />
         <Route path="/list/buildings" element={<BuildingsList />} />
         <Route path="/list/units" element={<UnitsList />} />
         <Route path="/list/companies" element={<CompaniesList />} />

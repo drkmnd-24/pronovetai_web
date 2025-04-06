@@ -5,7 +5,8 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from pronovetai_app.views import (
     AddressViewSet, UserViewSet, CompanyViewSet, ContactViewSet,
     BuildingViewSet, UnitViewSet, ODFormViewSet, BuildingImageViewSet,
-    UnitImageViewSet, StaffRegistrationView, ManagerRegistrationView
+    UnitImageViewSet, StaffRegistrationView, ManagerRegistrationView,
+    CurrentUserLogsView, ChangePasswordView
 )
 
 router = routers.DefaultRouter()
@@ -29,4 +30,6 @@ urlpatterns = [
     path('api/token/refresh', TokenRefreshView.as_view(), name='token_refresh'),
 
     path('api/users/me/', UserViewSet.as_view(), name='current_user'),
+    path('api/users/me/logs', CurrentUserLogsView.as_view(), name='current_user_logs'),
+    path('api/users/me/change_password/', ChangePasswordView.as_view(), name='change_password'),
 ]
