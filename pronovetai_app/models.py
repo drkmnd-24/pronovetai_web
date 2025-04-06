@@ -27,6 +27,15 @@ class User(AbstractUser):
         return self.username
 
 
+class UserLog(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='logs')
+    message = models.TextField()
+    timestamp = models.DateTimeField(autho_now_add=True)
+
+    def __str__(self):
+        return f'Log for {self.user.username} at {self.timestamp}'
+
+
 # CONTACT MODEL
 class Contact(models.Model):
     company = models.ForeignKey(
