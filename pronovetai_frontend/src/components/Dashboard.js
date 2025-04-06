@@ -8,7 +8,7 @@ import {
   BarElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
 } from "chart.js";
 
 // Register the required chart components
@@ -35,25 +35,27 @@ const Dashboard = () => {
           fetch("http://127.0.0.1:8000/api/buildings/", {
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`
-            }
+              Authorization: `Bearer ${token}`,
+            },
           }),
           fetch("http://127.0.0.1:8000/api/units/", {
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`
-            }
+              Authorization: `Bearer ${token}`,
+            },
           }),
           fetch("http://127.0.0.1:8000/api/odforms/", {
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`
-            }
-          })
+              Authorization: `Bearer ${token}`,
+            },
+          }),
         ]);
 
         if (!buildingsRes.ok || !unitsRes.ok || !odFormsRes.ok) {
-          throw new Error("Failed to fetch data from the API. Please check your credentials.");
+          throw new Error(
+            "Failed to fetch data from the API. Please check your credentials."
+          );
         }
 
         const buildingsData = await buildingsRes.json();
@@ -124,21 +126,21 @@ const Dashboard = () => {
         data: [
           odStatusCounts["active"] || 0,
           odStatusCounts["inactive"] || 0,
-          odStatusCounts["done_deal"] || 0
+          odStatusCounts["done_deal"] || 0,
         ],
-        backgroundColor: "rgba(75, 192, 192, 0.5)"
-      }
-    ]
+        backgroundColor: "rgba(75, 192, 192, 0.5)",
+      },
+    ],
   };
 
   return (
-    <div>
+    <div className="min-h-screen bg-gray-100">
       <TopNav />
       <div className="container mx-auto p-4">
         <h1 className="text-3xl font-bold mb-6 text-center">Dashboard Overview</h1>
         {/* Grid container for the first row (Buildings & Expiring Leases) */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="bg-white p-4 rounded shadow">
+          <div className="bg-gray-50 p-4 rounded shadow">
             <h2 className="text-2xl font-semibold mb-4">Buildings</h2>
             {buildingVacancy.length === 0 ? (
               <p>No buildings found.</p>
@@ -152,7 +154,7 @@ const Dashboard = () => {
               </ul>
             )}
           </div>
-          <div className="bg-white p-4 rounded shadow">
+          <div className="bg-gray-50 p-4 rounded shadow">
             <h2 className="text-2xl font-semibold mb-4">Expiring Leases</h2>
             {expiringLeases.length === 0 ? (
               <p>No leases expiring within the next 30 days.</p>
@@ -169,7 +171,7 @@ const Dashboard = () => {
         </div>
         {/* Grid container for the second row (OD Forms Overview & Chart) */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-          <div className="bg-white p-4 rounded shadow">
+          <div className="bg-gray-50 p-4 rounded shadow">
             <h2 className="text-2xl font-semibold mb-4">Office Demand (OD) Forms</h2>
             {odForms.length === 0 ? (
               <p>No office demand records.</p>
@@ -183,7 +185,7 @@ const Dashboard = () => {
               </ul>
             )}
           </div>
-          <div className="bg-white p-4 rounded shadow flex flex-col items-center">
+          <div className="bg-gray-50 p-4 rounded shadow flex flex-col items-center">
             <h2 className="text-2xl font-semibold mb-4">OD Forms Status Chart</h2>
             <div className="w-full max-w-md">
               <Bar data={chartData} />
