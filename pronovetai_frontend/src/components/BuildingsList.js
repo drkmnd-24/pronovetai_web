@@ -12,6 +12,8 @@ const BuildingsList = () => {
   const [sortKey, setSortKey] = useState("");
   const [sortDirection, setSortDirection] = useState("asc");
 
+  const [searchTerm, setSearchTerm] = useState("");
+
   const getContactName = (building) => {
     if (building.contacts && building.contacts.length > 0) {
       const ownerContact = building.contacts.find(
@@ -79,6 +81,11 @@ const BuildingsList = () => {
     return 0;
   });
 
+  // filter base on search term
+  const filteredBuildings = sortedBuildings.filter((b) =>
+      b.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   // Pagination: determine current page items
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -100,6 +107,21 @@ const BuildingsList = () => {
       <TopNav />
       <div className="container mx-auto p-4">
         <h1 className="text-2xl font-bold mb-4">Buildings</h1>
+        <div className="mb-4 flex justify-between items-center">
+          <input
+            type="text"
+            placeholder="Search by Building Name"
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="border border-gray-300 p-2 rounded w-1/2"
+          />
+          <div className="text-lg">
+            Total Records: {filteredBuildings.length}
+          </div>
+        </div>
         <table className="min-w-full bg-white border">
           <thead>
             <tr className="bg-gray-200">
