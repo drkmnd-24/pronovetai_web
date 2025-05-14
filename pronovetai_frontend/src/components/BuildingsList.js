@@ -1,103 +1,130 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import TopNav from "./TopNav";
+import {
+  useTable,
+  useSortBy,
+  usePagination,
+  useGlobalFilter
+} from "react-table";
+
+// Global filter component
+const GlobalFilter = ({ filter, setFilter }) => (
+  <input
+    value={filter || ""}
+    onChange={e => setFilter(e.target.value || undefined)}
+    placeholder="Search by Building Name"
+    className="border border-gray-300 p-2 rounded w-1/2"
+  />
+);
 
 const BuildingsList = () => {
   const [buildings, setBuildings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
-
-  const [sortKey, setSortKey] = useState("");
-  const [sortDirection, setSortDirection] = useState("asc");
-
-  const [searchTerm, setSearchTerm] = useState("");
-
-  const getContactName = (building) => {
-    if (building.contacts && building.contacts.length > 0) {
-      const ownerContact = building.contacts.find(
-        (c) => c.contact_type === "owner"
-      );
-      if (ownerContact) {
-        return `${ownerContact.first_name || ""} ${ownerContact.last_name || ""}`.trim();
-      }
-      const firstContact = building.contacts[0];
-      return `${firstContact.first_name || ""} ${firstContact.last_name || ""}`.trim();
-    }
-    return "N/A";
-  };
-
-  // Fetch buildings data
+  // Fetch buildings on mount
   useEffect(() => {
     const token = localStorage.getItem("accessToken");
     fetch("http://127.0.0.1:8000/api/buildings/", {
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+        Authorization: `Bearer ${token}`
+      }
     })
-      .then((res) => res.json())
-      .then((data) => {
+      .then(res => res.json())
+      .then(data => {
         setBuildings(data);
         setLoading(false);
       })
-      .catch((err) => {
+      .catch(() => {
         setError("Error fetching buildings");
         setLoading(false);
       });
   }, []);
 
-  // Function to handle sorting when a header is clicked.
-  const handleSort = (key) => {
-    if (sortKey === key) {
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
-    } else {
-      setSortKey(key);
-      setSortDirection("asc");
+  // Accessor for contact name
+  const getContactName = building => {
+    if (building.contacts && building.contacts.length) {
+      const owner = building.contacts.find(c => c.contact_type === "owner");
+      const contact = owner || building.contacts[0];
+      return `${contact.first_name || ""} ${contact.last_name || ""}`.trim();
     }
+    return "N/A";
   };
 
-  // Sorting logic for buildings array.
-  const sortedBuildings = [...buildings].sort((a, b) => {
-    let aVal = "";
-    let bVal = "";
-
-    if (sortKey === "name") {
-      aVal = a.name.toLowerCase();
-      bVal = b.name.toLowerCase();
-    } else if (sortKey === "building_type") {
-      aVal = a.building_type.toLowerCase();
-      bVal = b.building_type.toLowerCase();
-    } else if (sortKey === "contact") {
-      aVal = getContactName(a).toLowerCase();
-      bVal = getContactName(b).toLowerCase();
-    } else {
-      return 0;
-    }
-
-    if (aVal < bVal) return sortDirection === "asc" ? -1 : 1;
-    if (aVal > bVal) return sortDirection === "asc" ? 1 : -1;
-    return 0;
-  });
-
-  // filter base on search term
-  const filteredBuildings = sortedBuildings.filter((b) =>
-      b.name.toLowerCase().includes(searchTerm.toLowerCase())
+  // Define columns
+  const columns = useMemo(
+    () => [
+      {
+        Header: "Building Name",
+        accessor: "name"
+      },
+      {
+        Header: "Address",
+        accessor: row =>
+          row.address
+            ? `${row.address.street_address}, ${row.address.city}`
+            : "No address",
+        id: "address"
+      },
+      {
+        Header: "Type",
+        accessor: "building_type"
+      },
+      {
+        Header: "Contact",
+        accessor: getContactName,
+        id: "contact"
+      },
+      {
+        Header: "Grade",
+        accessor: "grade"
+      },
+      {
+        Header: "PEZA Certified",
+        accessor: row => (row.is_peza_certified ? "Yes" : "No"),
+        id: "peza"
+      },
+      {
+        Header: "Strata",
+        accessor: row => (row.is_strata ? "Yes" : "No"),
+        id: "strata"
+      }
+    ],
+    []
   );
 
-  // Pagination: determine current page items
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentBuildings = sortedBuildings.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(sortedBuildings.length / itemsPerPage);
+  const data = useMemo(() => buildings, [buildings]);
 
-  const nextPage = () => {
-    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
-  };
-  const prevPage = () => {
-    if (currentPage > 1) setCurrentPage(currentPage - 1);
-  };
+  // Create table instance
+  const {
+    getTableProps,
+    getTableBodyProps,
+    headerGroups,
+    page,
+    prepareRow,
+    state,
+    setGlobalFilter,
+    canPreviousPage,
+    canNextPage,
+    pageOptions,
+    pageCount,
+    gotoPage,
+    nextPage,
+    previousPage,
+    setPageSize
+  } = useTable(
+    {
+      columns,
+      data,
+      initialState: { pageIndex: 0, pageSize: 10 }
+    },
+    useGlobalFilter,
+    useSortBy,
+    usePagination
+  );
+
+  const { globalFilter, pageIndex, pageSize } = state;
 
   if (loading) return <div className="container mx-auto p-4">Loading...</div>;
   if (error) return <div className="container mx-auto p-4 text-red-600">{error}</div>;
@@ -106,85 +133,111 @@ const BuildingsList = () => {
     <div>
       <TopNav />
       <div className="container mx-auto p-4">
-        <h1 className="text-2xl font-bold mb-4">Buildings</h1>
+        <h1 className="text-2xl font-bold mb-4">Buildings ({data.length})</h1>
+
         <div className="mb-4 flex justify-between items-center">
-          <input
-            type="text"
-            placeholder="Search by Building Name"
-            value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value);
-              setCurrentPage(1);
-            }}
-            className="border border-gray-300 p-2 rounded w-1/2"
-          />
-          <div className="text-lg">
-            Total Records: {filteredBuildings.length}
-          </div>
+          <GlobalFilter filter={globalFilter} setFilter={setGlobalFilter} />
+          <div className="text-lg">Total Records: {data.length}</div>
         </div>
-        <table className="min-w-full bg-white border">
-          <thead>
-            <tr className="bg-gray-200">
-              <th
-                className="py-2 px-4 border cursor-pointer"
-                onClick={() => handleSort("name")}
-              >
-                Building Name {sortKey === "name" ? (sortDirection === "asc" ? "▲" : "▼") : ""}
-              </th>
-              <th className="py-2 px-4 border">Building Address</th>
-              <th
-                className="py-2 px-4 border cursor-pointer"
-                onClick={() => handleSort("building_type")}
-              >
-                Building Type {sortKey === "building_type" ? (sortDirection === "asc" ? "▲" : "▼") : ""}
-              </th>
-              <th
-                className="py-2 px-4 border cursor-pointer"
-                onClick={() => handleSort("contact")}
-              >
-                Contact Person {sortKey === "contact" ? (sortDirection === "asc" ? "▲" : "▼") : ""}
-              </th>
-              <th className="py-2 px-4 border">Grade</th>
-              <th className="py-2 px-4 border">PEZA Certified</th>
-              <th className="py-2 px-4 border">Strata</th>
-            </tr>
-          </thead>
-          <tbody>
-            {currentBuildings.map((b) => (
-              <tr key={b.id} className="text-center border-t">
-                <td className="py-2 px-4 border">{b.name}</td>
-                <td className="py-2 px-4 border">
-                  {b.address
-                    ? `${b.address.street_address}, ${b.address.city}`
-                    : "No address"}
-                </td>
-                <td className="py-2 px-4 border">{b.building_type}</td>
-                <td className="py-2 px-4 border">{getContactName(b)}</td>
-                <td className="py-2 px-4 border">{b.grade}</td>
-                <td className="py-2 px-4 border">{b.is_peza_certified ? "Yes" : "No"}</td>
-                <td className="py-2 px-4 border">{b.is_strata ? "Yes" : "No"}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+
+        <div className="overflow-x-auto">
+          <table
+            {...getTableProps()}
+            className="min-w-full bg-white border rounded"
+          >
+            <thead className="bg-gray-200">
+              {headerGroups.map(headerGroup => (
+                <tr {...headerGroup.getHeaderGroupProps()}>
+                  {headerGroup.headers.map(column => (
+                    <th
+                      {...column.getHeaderProps(
+                        column.getSortByToggleProps()
+                      )}
+                      className="py-2 px-4 border text-left cursor-pointer"
+                    >
+                      {column.render("Header")}
+                      <span>
+                        {column.isSorted
+                          ? column.isSortedDesc
+                            ? " 🔽"
+                            : " 🔼"
+                          : ""}
+                      </span>
+                    </th>
+                  ))}
+                </tr>
+              ))}
+            </thead>
+            <tbody {...getTableBodyProps()}>
+              {page.map(row => {
+                prepareRow(row);
+                return (
+                  <tr {...row.getRowProps()} className="border-t">
+                    {row.cells.map(cell => (
+                      <td
+                        {...cell.getCellProps()}
+                        className="py-2 px-4"
+                      >
+                        {cell.render("Cell")}
+                      </td>
+                    ))}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+
         <div className="flex justify-between items-center mt-4">
-          <button
-            onClick={prevPage}
-            disabled={currentPage === 1}
-            className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
-          >
-            Previous
-          </button>
+          <div>
+            <button
+              onClick={() => gotoPage(0)}
+              disabled={!canPreviousPage}
+              className="px-3 py-1 bg-gray-300 rounded mr-2 disabled:opacity-50"
+            >
+              {'<<'}
+            </button>
+            <button
+              onClick={() => previousPage()}
+              disabled={!canPreviousPage}
+              className="px-3 py-1 bg-gray-300 rounded disabled:opacity-50"
+            >
+              Previous
+            </button>
+          </div>
           <span>
-            Page {currentPage} of {totalPages}
+            Page{' '}
+            <strong>
+              {pageIndex + 1} of {pageOptions.length}
+            </strong>
           </span>
-          <button
-            onClick={nextPage}
-            disabled={currentPage === totalPages}
-            className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+          <div>
+            <button
+              onClick={() => nextPage()}
+              disabled={!canNextPage}
+              className="px-3 py-1 bg-gray-300 rounded mr-2 disabled:opacity-50"
+            >
+              Next
+            </button>
+            <button
+              onClick={() => gotoPage(pageCount - 1)}
+              disabled={!canNextPage}
+              className="px-3 py-1 bg-gray-300 rounded disabled:opacity-50"
+            >
+              {'>>'}
+            </button>
+          </div>
+          <select
+            value={pageSize}
+            onChange={e => setPageSize(Number(e.target.value))}
+            className="border p-2 rounded"
           >
-            Next
-          </button>
+            {[10, 20, 50].map(size => (
+              <option key={size} value={size}>
+                Show {size}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
     </div>
