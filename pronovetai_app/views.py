@@ -1,5 +1,7 @@
 from rest_framework import viewsets, generics, permissions
 from rest_framework.permissions import AllowAny
+from rest_framework_simplejwt.tokens import RefreshToken
+
 from .models import (
     Address, User, Company, Contact, Building, Unit, ODForm,
     BuildingImage, UnitImage, UserLog
@@ -15,7 +17,15 @@ from .serializers import (
 class StaffRegistrationView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = StaffRegistrationSerializer
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [AllowAny]
+
+    def create(self, request, *args, **kwargs):
+        resp = super().create(request, *args, **kwargs)
+        user = self.get_serializer().instance
+        refresh = RefreshToken.for_user(user)
+        resp.data['access'] = str(refresh.access_token)
+        resp.data['refresh'] = str(refresh)
+        return resp
 
 
 class ManagerRegistrationView(generics.CreateAPIView):
