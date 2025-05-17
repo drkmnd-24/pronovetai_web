@@ -5,7 +5,7 @@ from django.utils.translation import gettext_lazy as _
 
 
 def validated_image_size(image):
-    max_size = 5 * 1024 * 1024
+    max_size = 5 * 1024 * 1024  # 5MB
     if image.size > max_size:
         raise ValidationError(_('Maximum file size allowed is 5MB'))
 
@@ -23,6 +23,10 @@ class User(AbstractUser):
         help_text='Designated role: admin, manager or user'
     )
 
+    class Meta:
+        db_table = 'pt_users'
+        managed = False
+
     def __str__(self):
         return self.username
 
@@ -32,18 +36,30 @@ class UserLog(models.Model):
     message = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        db_table = 'pt_user_logs'
+        managed = False
+
     def __str__(self):
         return f'Log for {self.user.username} at {self.timestamp}'
 
 
-# CONTACT MODEL
+class Address(models.Model):
+    street_address = models.CharField(max_length=255, blank=True, null=True)
+    barangay = models.CharField(max_length=100, blank=True, null=True)
+    city = models.CharField(max_length=100)
+
+    class Meta:
+        db_table = 'pt_addresses'
+        managed = False
+
+    def __str__(self):
+        return f'{self.street_address} - {self.city}'
+
+
 class Contact(models.Model):
     company = models.ForeignKey(
-        'Company',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='contacts'
+        'Company', on_delete=models.SET_NULL, null=True, blank=True, related_name='contacts'
     )
     title = models.CharField(max_length=100, null=True, blank=True)
     first_name = models.CharField(max_length=100, null=True, blank=True)
@@ -54,7 +70,6 @@ class Contact(models.Model):
     mobile_number = models.CharField(max_length=20, null=True, blank=True)
     fax_number = models.CharField(max_length=20, null=True, blank=True)
     notes = models.TextField(null=True, blank=True)
-    # New field for contact type with the provided choices.
     CONTACT_TYPE_CHOICES = [
         ('property_manager', 'Property Manager'),
         ('tenant', 'Tenant'),
@@ -65,36 +80,23 @@ class Contact(models.Model):
         ('others', 'Others'),
     ]
     contact_type = models.CharField(
-        max_length=50,
-        choices=CONTACT_TYPE_CHOICES,
-        blank=True,
-        null=True
+        max_length=50, choices=CONTACT_TYPE_CHOICES, blank=True, null=True
     )
 
+    class Meta:
+        db_table = 'pt_contacts'
+        managed = False
+
     def __str__(self):
-        # Return full name if provided, otherwise email.
         if self.first_name or self.last_name:
             return f"{self.first_name} {self.last_name}".strip()
         return self.email
 
 
-class Address(models.Model):
-    street_address = models.CharField(max_length=255, blank=True, null=True)
-    barangay = models.CharField(max_length=100, blank=True, null=True)
-    city = models.CharField(max_length=100)
-
-    def __str__(self):
-        return f'{self.street_address} - {self.city}'
-
-
 class Building(models.Model):
     name = models.CharField(max_length=255)
     address = models.ForeignKey(
-        'Address',
-        on_delete=models.SET_NULL,
-        blank=True,
-        null=True,
-        related_name='buildings'
+        Address, on_delete=models.SET_NULL, blank=True, null=True, related_name='buildings'
     )
     year_built = models.PositiveIntegerField()
     is_for_sale = models.BooleanField(default=False)
@@ -118,19 +120,16 @@ class Building(models.Model):
     space_for_lease = models.DecimalField(max_digits=10, decimal_places=2)
     space_for_sale = models.DecimalField(max_digits=10, decimal_places=2)
     space_occupied = models.DecimalField(max_digits=10, decimal_places=2)
-
-    # Instead of separate contact fields, we associate contacts via a ManyToMany field.
-    contacts = models.ManyToManyField('Contact', blank=True, related_name='buildings')
-
-    # Log fields
+    contacts = models.ManyToManyField(Contact, blank=True, related_name='buildings')
     created_by = models.ForeignKey(
-        User,
-        on_delete=models.SET_NULL,
-        null=True,
-        related_name='buildings_created'
+        User, on_delete=models.SET_NULL, null=True, related_name='buildings_created'
     )
     created_at = models.DateTimeField(auto_now_add=True)
     last_edited = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'pt_buildings'
+        managed = False
 
     def __str__(self):
         return self.name
@@ -147,7 +146,6 @@ class Unit(models.Model):
         ('vacant', 'Vacant'),
         ('occupied', 'Occupied'),
     ]
-
     name = models.CharField(max_length=255)
     building = models.ForeignKey(Building, on_delete=models.CASCADE, related_name='units')
     floor = models.IntegerField()
@@ -155,17 +153,14 @@ class Unit(models.Model):
     vacancy_status = models.CharField(max_length=20, choices=VACANCY_STATUS_CHOICES, default='vacant')
     foreclosed = models.BooleanField(default=False)
     contact_information = models.CharField(max_length=255)
-    # Unit details
     gross_floor_area = models.DecimalField(max_digits=10, decimal_places=2)
     net_floor_area = models.DecimalField(max_digits=10, decimal_places=2)
     floor_to_ceiling_height = models.DecimalField(max_digits=5, decimal_places=2)
     ceiling_condition = models.CharField(max_length=100)
     floor_condition = models.CharField(max_length=100)
     partition_condition = models.CharField(max_length=100)
-    # Current lease details
     lease_commencement_date = models.DateField(null=True, blank=True)
     lease_expiry_date = models.DateField(null=True, blank=True)
-    # For lease details
     asking_rent = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     allocated_parking_slot = models.PositiveIntegerField(null=True, blank=True)
     price_per_parking_slot = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
@@ -173,19 +168,19 @@ class Unit(models.Model):
     escalation_rate = models.DecimalField(max_digits=4, decimal_places=2, null=True, blank=True)
     rent_free = models.CharField(max_length=50, null=True, blank=True)
     dues = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    # For sale details
     sale_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     sale_parking = models.CharField(max_length=50, null=True, blank=True)
-    # Additional notes
-    unit_notes = models.TextField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'pt_units'
+        managed = False
 
     def clean(self):
         if self.net_floor_area > self.gross_floor_area:
-            raise ValidationError(_('Net Floor area cannot be greater than gross floor area'))
-
+            raise ValidationError(_('Net floor area cannot exceed gross floor area'))
         if self.lease_commencement_date and self.lease_expiry_date:
             if self.lease_commencement_date > self.lease_expiry_date:
-                raise ValidationError(_('Lease commencement date must be before lease expiry date'))
+                raise ValidationError(_('Lease commencement must be before lease expiry'))
 
     def __str__(self):
         return f"{self.name} ({self.building.name})"
@@ -193,30 +188,17 @@ class Unit(models.Model):
 
 class Company(models.Model):
     name = models.CharField(max_length=255)
-    # Relate a company to a building (if applicable) via a ForeignKey.
-    building = models.ForeignKey(
-        Building,
-        on_delete=models.CASCADE,
-        related_name='companies'
-    )
+    building = models.ForeignKey(Building, on_delete=models.CASCADE, related_name='companies')
     address = models.ForeignKey(
-        'Address',
-        on_delete=models.SET_NULL,
-        blank=True,
-        null=True,
-        related_name='companies'
+        Address, on_delete=models.SET_NULL, blank=True, null=True, related_name='companies'
     )
     industry = models.CharField(max_length=100)
-    building_affiliations = models.ManyToManyField(
-        Building,
-        related_name='affiliated_companies',
-        blank=True
-    )
-    unit_affiliations = models.ManyToManyField(
-        'Unit',
-        related_name='affiliated_companies',
-        blank=True
-    )
+    building_affiliations = models.ManyToManyField(Building, related_name='affiliated_companies', blank=True)
+    unit_affiliations = models.ManyToManyField(Unit, related_name='affiliated_companies', blank=True)
+
+    class Meta:
+        db_table = 'pt_companies'
+        managed = False
 
     def __str__(self):
         return self.name
@@ -227,7 +209,6 @@ class ODForm(models.Model):
         ('inbound', 'Inbound'),
         ('outbound', 'Outbound'),
     ]
-
     SOURCE_OF_CALL_CHOICES = [
         ('newspaper', 'Newspaper'),
         ('old_client', 'Old Client'),
@@ -238,18 +219,15 @@ class ODForm(models.Model):
         ('yellow_pages', 'Yellow Pages'),
         ('others', 'Others'),
     ]
-
     TYPE_OF_CALLER_CHOICES = [
         ('broker', 'Broker'),
         ('direct', 'Direct Buyer / Lease'),
     ]
-
     INTENT_CHOICES = [
         ('rent', 'To Rent'),
         ('buy', 'To Buy'),
         ('both', 'Both'),
     ]
-
     PURPOSE_CHOICES = [
         ('expanding', 'Expanding'),
         ('relocating', 'Relocating'),
@@ -260,14 +238,13 @@ class ODForm(models.Model):
         ('expanding_retaining', 'Expanding while retaining current office'),
         ('others', 'Others'),
     ]
-
     STATUS_CHOICES = [
         ('active', 'Active'),
         ('inactive', 'Inactive'),
         ('done_deal', 'Done Deal'),
     ]
     date = models.DateTimeField()
-    contact = models.ForeignKey('Contact', on_delete=models.SET_NULL, null=True, blank=True, related_name='od_forms')
+    contact = models.ForeignKey(Contact, on_delete=models.SET_NULL, null=True, blank=True, related_name='od_forms')
     call_taken_by = models.CharField(max_length=255, null=True, blank=True)
     type_of_call = models.CharField(max_length=10, choices=TYPE_OF_CALL_CHOICES)
     source_of_call = models.CharField(max_length=20, choices=SOURCE_OF_CALL_CHOICES)
@@ -281,22 +258,18 @@ class ODForm(models.Model):
     budget_maximum = models.DecimalField(max_digits=10, decimal_places=2)
     started_scouting = models.BooleanField(default=False)
     notes = models.TextField(blank=True, null=True)
-    account_manager = models.ForeignKey(
-        User,
-        on_delete=models.SET_NULL,
-        null=True, blank=True,
-        limit_choices_to={'is_staff': True},
-        related_name='od_forms'
-    )
+    account_manager = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, limit_choices_to={'is_staff': True}, related_name='od_forms')
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='active')
-
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'pt_odforms'
+        managed = False
 
     def clean(self):
         if self.size_minimum > self.size_maximum:
             raise ValidationError(_('Size minimum cannot be greater than size maximum'))
-
         if self.budget_minimum > self.budget_maximum:
             raise ValidationError(_('Budget minimum cannot be greater than budget maximum'))
 
@@ -307,6 +280,10 @@ class ODForm(models.Model):
 class BuildingImage(models.Model):
     building = models.ForeignKey(Building, on_delete=models.CASCADE, related_name='images')
     image = models.ImageField(upload_to='building_images/', validators=[validated_image_size])
+
+    class Meta:
+        db_table = 'pt_building_images'
+        managed = False
 
     def clean(self):
         if self.building and not self.pk and self.building.images.count() >= 3:
@@ -320,9 +297,13 @@ class UnitImage(models.Model):
     unit = models.ForeignKey(Unit, on_delete=models.CASCADE, related_name='images')
     image = models.ImageField(upload_to='unit_images/', validators=[validated_image_size])
 
+    class Meta:
+        db_table = 'pt_unit_images'
+        managed = False
+
     def clean(self):
         if self.unit and not self.pk and self.unit.images.count() >= 3:
-            raise ValidationError(_('Maximum of 3 images allowed per building'))
+            raise ValidationError(_('Maximum of 3 images allowed per unit'))
 
     def __str__(self):
         return f'Image for {self.unit.name}'
