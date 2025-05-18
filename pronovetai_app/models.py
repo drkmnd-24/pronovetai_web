@@ -2,7 +2,26 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
+from django.conf import settings
+from django.utils.dateparse import parse_datetime
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
+
+
+class MyDateTimeField(models.DateTimeField):
+    def from_db_value(self, value, expression, connection):
+        if value is None:
+            return None
+        if isinstance(value, str):
+            dt = parse_datetime(value)
+            if dt is None:
+                return super().from_db_value(value, expression, connection)
+            if settings.USE_TZ:
+                dt = timezone.make_aware(dt, self._get_connection_timezone(connection))
+            return dt
+        return value
+
+    def _get_connection_timezone(self, connection):
+        return getattr(connection, 'timezone', timezone.get_current_timezone())
 
 
 def validated_image_size(image):
@@ -53,7 +72,11 @@ class User(AbstractBaseUser):
     email = models.EmailField(db_column='user_email', blank=True)
     first_name = models.CharField(max_length=150, db_column='user_first_name', blank=True)
     last_name = models.CharField(max_length=150, db_column='user_last_name', blank=True)
-    date_joined = models.DateTimeField(db_column='user_registered', default=timezone.now)
+    date_joined = MyDateTimeField(
+        db_column='user_registered',
+        default=timezone.now,
+        help_text='When this user was created'
+    )
     created_by = models.ForeignKey(
         'self',
         on_delete=models.SET_NULL,
