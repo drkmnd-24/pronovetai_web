@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
+from django.utils import timezone
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 
 
@@ -27,6 +28,7 @@ class CustomUserManager(BaseUserManager):
     def create_user(self, username, password=None, **extra_fields):
         if not username:
             raise ValueError("Username must be set")
+        extra_fields.setdefault('date_joined', timezone.now())
         user = self.model(username=username, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
@@ -48,7 +50,7 @@ class User(AbstractBaseUser):
     email = models.EmailField(db_column='user_email', blank=True)
     first_name = models.CharField(max_length=150, db_column='user_first_name', blank=True)
     last_name = models.CharField(max_length=150, db_column='user_last_name', blank=True)
-    date_joined = models.DateTimeField(db_column='user_registered')
+    date_joined = models.DateTimeField(db_column='user_registered', default=timezone.now)
 
     # link to your user-type table
     user_type = models.ForeignKey(
