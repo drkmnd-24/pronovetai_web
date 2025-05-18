@@ -20,7 +20,6 @@ router.register(r'building-images', BuildingImageViewSet)
 router.register(r'unit-images', UnitImageViewSet)
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
     path('api/', include(router.urls)),
 
     path('api/register/staff', StaffRegistrationView.as_view(), name='staff_registration'),

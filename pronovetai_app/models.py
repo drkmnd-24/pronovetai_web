@@ -11,6 +11,39 @@ def validated_image_size(image):
 
 
 class User(AbstractUser):
+    # your real PK
+    user_id = models.AutoField(
+        primary_key=True,
+        db_column='user_id',
+    )
+
+    # override the username field to point at user_login
+    username = models.CharField(
+        max_length=150,
+        unique=True,
+        db_column='user_login',
+    )
+
+    # override the password field to point at user_pass
+    password = models.CharField(
+        max_length=128,
+        db_column='user_pass',
+    )
+
+    # map the rest of the attrs
+    email = models.EmailField(db_column='user_email', blank=True)
+    first_name = models.CharField(max_length=150, db_column='user_first_name', blank=True)
+    last_name = models.CharField(max_length=150, db_column='user_last_name', blank=True)
+    date_joined = models.DateTimeField(db_column='user_registered')
+
+    # Django expects these boolean flags; your table doesn’t have them,
+    # so we’ll just default them in Python.
+    is_active = True
+    is_staff = False
+    is_superuser = False
+    last_login = None
+
+    # keep your role mapping
     USER_ROLE_CHOICES = [
         ('admin', 'Admin'),
         ('manager', 'Manager'),
@@ -23,12 +56,13 @@ class User(AbstractUser):
         help_text='Designated role: admin, manager or user'
     )
 
+    # tell Django “this is my user model” and don’t try to manage its table
+    USERNAME_FIELD = 'username'
+    REQUIRED_FIELDS = ['email']
+
     class Meta:
         db_table = 'pt_users'
         managed = False
-
-    def __str__(self):
-        return self.username
 
 
 class UserLog(models.Model):
