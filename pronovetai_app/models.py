@@ -2,7 +2,6 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
-from django.contrib.auth.models import PermissionsMixin
 
 
 def validated_image_size(image):
@@ -35,11 +34,14 @@ class CustomUserManager(BaseUserManager):
 
     def create_superuser(self, username, password, **extra_fields):
         extra_fields.setdefault('is_staff', True)
-        extra_fields.setdefault('is_superuser', True)
         return self.create_user(username, password, **extra_fields)
 
 
-class User(AbstractBaseUser, PermissionsMixin):
+class User(AbstractBaseUser):
+    """
+    A truly custom user model pointing at your `pt_users` table,
+    with no BooleanField columns for is_active/is_staff in the DB.
+    """
     id = models.AutoField(primary_key=True, db_column='user_id')
     username = models.CharField(max_length=150, unique=True, db_column='user_login')
     password = models.CharField(max_length=128, db_column='user_pass')
@@ -47,20 +49,19 @@ class User(AbstractBaseUser, PermissionsMixin):
     first_name = models.CharField(max_length=150, db_column='user_first_name', blank=True)
     last_name = models.CharField(max_length=150, db_column='user_last_name', blank=True)
     date_joined = models.DateTimeField(db_column='user_registered')
-    last_login = models.DateTimeField(db_column='last_login', null=True)
 
     # link to your user-type table
     user_type = models.ForeignKey(
-        UserType,
+        'UserType',
         on_delete=models.SET_NULL,
         null=True,
         db_column='user_type_id',
         related_name='users'
     )
 
-    # minimal flags for Django’s auth/admin
-    is_active = models.BooleanField(default=True)
-    is_staff = models.BooleanField(default=False)
+    # **no** BooleanField columns in the DB; just Python flags:
+    is_active = True
+    is_staff = False
 
     objects = CustomUserManager()
 
@@ -77,12 +78,25 @@ class User(AbstractBaseUser, PermissionsMixin):
     def get_short_name(self):
         return self.first_name or self.username
 
+    # Django (and SimpleJWT) will check these:
+    def has_perm(self, perm, obj=None):
+        # only “staff” can do admin-style things
+        return bool(self.is_staff)
+
+    def has_module_perms(self, app_label):
+        return bool(self.is_staff)
+
     def __str__(self):
         return self.username
 
 
 class UserLog(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='logs', db_column='user_id')
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='logs',
+        db_column='user_id'
+    )
     message = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
 
@@ -109,7 +123,12 @@ class Address(models.Model):
 
 class Contact(models.Model):
     company = models.ForeignKey(
-        'Company', on_delete=models.SET_NULL, null=True, blank=True, related_name='contacts', db_column='company_id'
+        'Company',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='contacts',
+        db_column='company_id'
     )
     title = models.CharField(max_length=100, null=True, blank=True)
     first_name = models.CharField(max_length=100, null=True, blank=True)
@@ -129,7 +148,9 @@ class Contact(models.Model):
         ('pta', 'PTA'),
         ('others', 'Others'),
     ]
-    contact_type = models.CharField(max_length=50, choices=CONTACT_TYPE_CHOICES, blank=True, null=True)
+    contact_type = models.CharField(
+        max_length=50, choices=CONTACT_TYPE_CHOICES, blank=True, null=True
+    )
 
     class Meta:
         db_table = 'pt_contacts'
@@ -145,7 +166,12 @@ class Building(models.Model):
     id = models.AutoField(primary_key=True, db_column='building_id')
     name = models.CharField(max_length=255)
     address = models.ForeignKey(
-        Address, on_delete=models.SET_NULL, blank=True, null=True, related_name='buildings', db_column='address_id'
+        Address,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name='buildings',
+        db_column='address_id'
     )
     year_built = models.PositiveIntegerField()
     is_for_sale = models.BooleanField(default=False)
@@ -169,8 +195,19 @@ class Building(models.Model):
     space_for_lease = models.DecimalField(max_digits=10, decimal_places=2)
     space_for_sale = models.DecimalField(max_digits=10, decimal_places=2)
     space_occupied = models.DecimalField(max_digits=10, decimal_places=2)
-    contacts = models.ManyToManyField(Contact, blank=True, related_name='buildings', db_table='pt_building_contacts')
-    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='buildings_created', db_column='created_user_id')
+    contacts = models.ManyToManyField(
+        Contact,
+        blank=True,
+        related_name='buildings',
+        db_table='pt_building_contacts'
+    )
+    created_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='buildings_created',
+        db_column='created_user_id'
+    )
     created_at = models.DateTimeField(auto_now_add=True, db_column='created_date')
     last_edited = models.DateTimeField(auto_now=True, db_column='edited_date')
 
@@ -185,7 +222,12 @@ class Building(models.Model):
 class Unit(models.Model):
     id = models.AutoField(primary_key=True, db_column='unit_id')
     name = models.CharField(max_length=255)
-    building = models.ForeignKey(Building, on_delete=models.CASCADE, related_name='units', db_column='building_id')
+    building = models.ForeignKey(
+        Building,
+        on_delete=models.CASCADE,
+        related_name='units',
+        db_column='building_id'
+    )
     floor = models.IntegerField()
     MARKETING_STATUS_CHOICES = [
         ('lease', 'For Lease'),
@@ -193,12 +235,20 @@ class Unit(models.Model):
         ('lease_sale', 'For Lease and For Sale'),
         ('unknown', "Don't know"),
     ]
-    marketing_status = models.CharField(max_length=20, choices=MARKETING_STATUS_CHOICES, default='unknown')
+    marketing_status = models.CharField(
+        max_length=20,
+        choices=MARKETING_STATUS_CHOICES,
+        default='unknown'
+    )
     VACANCY_STATUS_CHOICES = [
         ('vacant', 'Vacant'),
         ('occupied', 'Occupied'),
     ]
-    vacancy_status = models.CharField(max_length=20, choices=VACANCY_STATUS_CHOICES, default='vacant')
+    vacancy_status = models.CharField(
+        max_length=20,
+        choices=VACANCY_STATUS_CHOICES,
+        default='vacant'
+    )
     foreclosed = models.BooleanField(default=False)
     contact_information = models.CharField(max_length=255)
     gross_floor_area = models.DecimalField(max_digits=10, decimal_places=2)
@@ -236,11 +286,33 @@ class Unit(models.Model):
 class Company(models.Model):
     id = models.AutoField(primary_key=True, db_column='company_id')
     name = models.CharField(max_length=255)
-    building = models.ForeignKey(Building, on_delete=models.CASCADE, related_name='companies', db_column='building_id')
-    address = models.ForeignKey(Address, on_delete=models.SET_NULL, blank=True, null=True, related_name='companies', db_column='address_id')
+    building = models.ForeignKey(
+        Building,
+        on_delete=models.CASCADE,
+        related_name='companies',
+        db_column='building_id'
+    )
+    address = models.ForeignKey(
+        Address,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name='companies',
+        db_column='address_id'
+    )
     industry = models.CharField(max_length=100)
-    building_affiliations = models.ManyToManyField(Building, related_name='affiliated_companies', blank=True, db_table='pt_company_building_affiliations')
-    unit_affiliations = models.ManyToManyField(Unit, related_name='affiliated_companies', blank=True, db_table='pt_company_unit_affiliations')
+    building_affiliations = models.ManyToManyField(
+        Building,
+        related_name='affiliated_companies',
+        blank=True,
+        db_table='pt_company_building_affiliations'
+    )
+    unit_affiliations = models.ManyToManyField(
+        Unit,
+        related_name='affiliated_companies',
+        blank=True,
+        db_table='pt_company_unit_affiliations'
+    )
 
     class Meta:
         db_table = 'pt_companies'
@@ -253,24 +325,31 @@ class Company(models.Model):
 class ODForm(models.Model):
     id = models.AutoField(primary_key=True, db_column='odform_id')
     date = models.DateTimeField(db_column='date')
-    contact = models.ForeignKey(Contact, on_delete=models.SET_NULL, null=True, blank=True, related_name='od_forms', db_column='contact_id')
+    contact = models.ForeignKey(
+        Contact,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='od_forms',
+        db_column='contact_id'
+    )
     call_taken_by = models.CharField(max_length=255, null=True, blank=True)
-    TYPE_OF_CALL_CHOICES = [('inbound','Inbound'),('outbound','Outbound')]
+    TYPE_OF_CALL_CHOICES = [('inbound', 'Inbound'), ('outbound', 'Outbound')]
     type_of_call = models.CharField(max_length=10, choices=TYPE_OF_CALL_CHOICES)
     SOURCE_OF_CALL_CHOICES = [
-        ('newspaper','Newspaper'),('old_client','Old Client'),('online_marketing','Online Marketing'),
-        ('referral','Referral'),('signage','Signage'),('website','Website'),('yellow_pages','Yellow Pages'),
-        ('others','Others'),
+        ('newspaper', 'Newspaper'), ('old_client', 'Old Client'), ('online_marketing', 'Online Marketing'),
+        ('referral', 'Referral'), ('signage', 'Signage'), ('website', 'Website'), ('yellow_pages', 'Yellow Pages'),
+        ('others', 'Others'),
     ]
     source_of_call = models.CharField(max_length=20, choices=SOURCE_OF_CALL_CHOICES)
-    TYPE_OF_CALLER_CHOICES = [('broker','Broker'),('direct','Direct Buyer / Lease')]
+    TYPE_OF_CALLER_CHOICES = [('broker', 'Broker'), ('direct', 'Direct Buyer / Lease')]
     type_of_caller = models.CharField(max_length=20, choices=TYPE_OF_CALLER_CHOICES)
-    INTENT_CHOICES = [('rent','To Rent'),('buy','To Buy'),('both','Both')]
+    INTENT_CHOICES = [('rent', 'To Rent'), ('buy', 'To Buy'), ('both', 'Both')]
     intent = models.CharField(max_length=10, choices=INTENT_CHOICES)
     PURPOSE_CHOICES = [
-        ('expanding','Expanding'),('relocating','Relocating'),('new_office','New Office'),
-        ('consolidating','Consolidating'),('downsizing','Downsizing'),('upgrading','Upgrading'),
-        ('expanding_retaining','Expanding while retaining'),('others','Others'),
+        ('expanding', 'Expanding'), ('relocating', 'Relocating'), ('new_office', 'New Office'),
+        ('consolidating', 'Consolidating'), ('downsizing', 'Downsizing'), ('upgrading', 'Upgrading'),
+        ('expanding_retaining', 'Expanding while retaining'), ('others', 'Others'),
     ]
     purpose = models.CharField(max_length=30, choices=PURPOSE_CHOICES)
     size_minimum = models.DecimalField(max_digits=10, decimal_places=2)
@@ -280,8 +359,15 @@ class ODForm(models.Model):
     budget_maximum = models.DecimalField(max_digits=10, decimal_places=2)
     started_scouting = models.BooleanField(default=False)
     notes = models.TextField(blank=True, null=True)
-    account_manager = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='od_forms', db_column='account_manager_id')
-    STATUS_CHOICES = [('active','Active'),('inactive','Inactive'),('done_deal','Done Deal')]
+    account_manager = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='od_forms',
+        db_column='account_manager_id'
+    )
+    STATUS_CHOICES = [('active', 'Active'), ('inactive', 'Inactive'), ('done_deal', 'Done Deal')]
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='active')
     created_at = models.DateTimeField(auto_now_add=True, db_column='created_at')
     updated_at = models.DateTimeField(auto_now=True, db_column='updated_at')
@@ -301,7 +387,12 @@ class ODForm(models.Model):
 
 
 class BuildingImage(models.Model):
-    building = models.ForeignKey(Building, on_delete=models.CASCADE, related_name='images', db_column='building_id')
+    building = models.ForeignKey(
+        Building,
+        on_delete=models.CASCADE,
+        related_name='images',
+        db_column='building_id'
+    )
     image = models.ImageField(upload_to='building_images/', validators=[validated_image_size])
 
     class Meta:
@@ -313,7 +404,12 @@ class BuildingImage(models.Model):
 
 
 class UnitImage(models.Model):
-    unit = models.ForeignKey(Unit, on_delete=models.CASCADE, related_name='images', db_column='unit_id')
+    unit = models.ForeignKey(
+        Unit,
+        on_delete=models.CASCADE,
+        related_name='images',
+        db_column='unit_id'
+    )
     image = models.ImageField(upload_to='unit_images/', validators=[validated_image_size])
 
     class Meta:
