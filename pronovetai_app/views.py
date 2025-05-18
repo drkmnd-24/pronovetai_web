@@ -1,5 +1,6 @@
 from rest_framework import viewsets, generics, permissions
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import (
@@ -17,7 +18,11 @@ from .serializers import (
 class StaffRegistrationView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = StaffRegistrationSerializer
-    permission_classes = [AllowAny]
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated, IsAdminUser]
+
+    def get_serializer_context(self):
+        return {'request': self.request}
 
     def create(self, request, *args, **kwargs):
         resp = super().create(request, *args, **kwargs)
@@ -31,7 +36,11 @@ class StaffRegistrationView(generics.CreateAPIView):
 class ManagerRegistrationView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = ManagerRegistrationSerializer
-    permission_classes = [permissions.IsAdminUser]
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated, IsAdminUser]
+
+    def get_serializer_context(self):
+        return {'request': self.request}
 
 
 class AddressViewSet(viewsets.ModelViewSet):

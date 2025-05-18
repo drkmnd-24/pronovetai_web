@@ -27,8 +27,10 @@ class StaffRegistrationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        # we no longer have a 'role' field; we'll hard‐code user_type
-        fields = ['username', 'email', 'first_name', 'last_name', 'password', 'confirm_password']
+        fields = [
+            'username', 'email', 'first_name', 'last_name',
+            'password', 'confirm_password'
+        ]
 
     def validate(self, data):
         if data['password'] != data['confirm_password']:
@@ -37,29 +39,32 @@ class StaffRegistrationSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         validated_data.pop('confirm_password')
-        # pick the UserType row whose description is “User”
+        creator = self.context['request'].user
+        # fetch the “User” user_type
         user_type = UserType.objects.get(description__iexact='User')
-        user = User(
+        # call through your manager, passing created_by
+        user = User.objects.create_user(
             username=validated_data['username'],
-            email=validated_data.get('email', ''),
-            first_name=validated_data.get('first_name', ''),
-            last_name=validated_data.get('last_name', ''),
+            password=validated_data['password'],
+            email=validated_data.get('email',''),
+            first_name=validated_data.get('first_name',''),
+            last_name=validated_data.get('last_name',''),
             user_type=user_type,
+            created_by=creator
         )
-        user.set_password(validated_data['password'])
-        # no DB column, but Django/auth will read this flag in memory:
-        user.is_staff = False
-        user.save()
         return user
 
 
 class ManagerRegistrationSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True, required=True)
-    confirm_password = serializers.CharField(write_only=True, required=True)
+    password = serializers.CharField(write_only=True)
+    confirm_password = serializers.CharField(write_only=True)
 
     class Meta:
         model = User
-        fields = ['username', 'email', 'first_name', 'last_name', 'password', 'confirm_password']
+        fields = [
+            'username', 'email', 'first_name', 'last_name',
+            'password', 'confirm_password'
+        ]
 
     def validate(self, data):
         if data['password'] != data['confirm_password']:
@@ -68,17 +73,18 @@ class ManagerRegistrationSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         validated_data.pop('confirm_password')
-        user_type = UserType.objects.get(description__iexact='Manager')
-        user = User(
+        creator = self.context['request'].user
+        manager_type = UserType.objects.get(description__iexact='Manager')
+        user = User.objects.create_user(
             username=validated_data['username'],
-            email=validated_data.get('email', ''),
-            first_name=validated_data.get('first_name', ''),
-            last_name=validated_data.get('last_name', ''),
-            user_type=user_type,
+            password=validated_data['password'],
+            email=validated_data.get('email',''),
+            first_name=validated_data.get('first_name',''),
+            last_name=validated_data.get('last_name',''),
+            user_type=manager_type,
+            created_by=creator,
+            is_staff=True
         )
-        user.set_password(validated_data['password'])
-        user.is_staff = True
-        user.save()
         return user
 
 

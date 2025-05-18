@@ -25,11 +25,14 @@ class UserType(models.Model):
 
 
 class CustomUserManager(BaseUserManager):
-    def create_user(self, username, password=None, **extra_fields):
+    def create_user(self, username, password=None, created_by=None, **extra_fields):
         if not username:
             raise ValueError("Username must be set")
         extra_fields.setdefault('date_joined', timezone.now())
-        user = self.model(username=username, **extra_fields)
+        user = self.model(
+            username=username,
+            created_by=created_by,
+            **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
         return user
@@ -51,6 +54,24 @@ class User(AbstractBaseUser):
     first_name = models.CharField(max_length=150, db_column='user_first_name', blank=True)
     last_name = models.CharField(max_length=150, db_column='user_last_name', blank=True)
     date_joined = models.DateTimeField(db_column='user_registered', default=timezone.now)
+    created_by = models.ForeignKey(
+        'self',
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        db_column='created_user_id',
+        related_name='users_created')
+    created_date = models.DateTimeField(
+        db_column='created_date',
+        auto_now_add=True
+    )
+    edited_by = models.ForeignKey(
+        'self',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        db_column='edited_user_id',
+        related_name='users_edited')
+    edited_date = models.DateTimeField(db_column='edited_date', auto_now=True)
 
     # link to your user-type table
     user_type = models.ForeignKey(
