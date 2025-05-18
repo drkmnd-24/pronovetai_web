@@ -1,5 +1,6 @@
 // src/components/ContactsList.js
 import React, { useEffect, useState, useMemo } from "react";
+import { authFetch } from "../api";
 import TopNav from "./TopNav";
 import {
   useTable,
@@ -24,22 +25,19 @@ const ContactsList = () => {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    const token = localStorage.getItem("accessToken");
-    fetch("http://127.0.0.1:8000/api/contacts/", {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`
-      }
-    })
-      .then(res => res.json())
-      .then(data => {
+    async function load() {
+      try {
+        const res = await authFetch('/contacts/');
+        if (!res.ok) throw new Error('Fetch failed');
+        const data = await res.json();
         setContacts(data);
+      } catch {
+        setError('Error fetching buildings');
+      } finally {
         setLoading(false);
-      })
-      .catch(() => {
-        setError("Error fetching contacts");
-        setLoading(false);
-      });
+      }
+    }
+    load();
   }, []);
 
   // Define table columns

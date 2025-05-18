@@ -1,5 +1,6 @@
 // src/components/ODFormsList.js
 import React, { useEffect, useState, useMemo } from "react";
+import { authFetch } from "../api";
 import TopNav from "./TopNav";
 import {
   useTable,
@@ -24,22 +25,19 @@ const ODFormsList = () => {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    const token = localStorage.getItem("accessToken");
-    fetch("http://127.0.0.1:8000/api/odforms/", {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`
-      }
-    })
-      .then(res => res.json())
-      .then(data => {
+    async function load() {
+      try {
+        const res = await authFetch('/odforms/');
+        if (!res.ok) throw new Error('Fetch failed');
+        const data = await res.json();
         setOdForms(data);
+      } catch {
+        setError('Error fetching buildings');
+      } finally {
         setLoading(false);
-      })
-      .catch(() => {
-        setError("Error fetching OD Forms");
-        setLoading(false);
-      });
+      }
+    }
+    load();
   }, []);
 
   // Define table columns

@@ -36,7 +36,11 @@ const StaffRegistration = () => {
             });
             const data = await response.json();
             if (response.ok) {
-                setSuccess('Staff account created successfully');
+                // setSuccess('Staff account created successfully');
+                // save tokens immediately so user is "logged in"
+                localStorage.setItem('accessToken', data.access);
+                localStorage.setItem('refreshToken', data.refresh);
+                setSuccess('Staff account created successfull - redirecting...');
                 setFormData({
                     username: '',
                     email: '',
@@ -45,7 +49,8 @@ const StaffRegistration = () => {
                     password: '',
                     confirm_password: ''
                 });
-                navigate('/login');
+                // navigate('/login');
+                navigate('/dashboard');
             } else {
                 setError(data.detail || 'Registration failed');
             }

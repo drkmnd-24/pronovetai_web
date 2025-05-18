@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
+import { authFetch } from "../api";
 import TopNav from "./TopNav";
 import {
   useTable,
@@ -23,22 +24,19 @@ const UnitsList = () => {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    const token = localStorage.getItem("accessToken");
-    fetch("http://127.0.0.1:8000/api/units/", {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`
-      }
-    })
-      .then(res => res.json())
-      .then(data => {
+    async function load() {
+      try {
+        const res = await authFetch('/units/');
+        if (!res.ok) throw new Error('Fetch failed');
+        const data = await res.json();
         setUnits(data);
+      } catch {
+        setError('Error fetching buildings');
+      } finally {
         setLoading(false);
-      })
-      .catch(() => {
-        setError("Error fetching units");
-        setLoading(false);
-      });
+      }
+    }
+    load();
   }, []);
 
   // Define table columns

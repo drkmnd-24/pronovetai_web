@@ -1,7 +1,10 @@
 // src/components/ManagerRegistration.js
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { authFetch } from '../api';
 
 const ManagerRegistration = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -14,7 +17,7 @@ const ManagerRegistration = () => {
   const [success, setSuccess] = useState('');
 
   const handleChange = (e) => {
-    setFormData({...formData, [e.target.name]: e.target.value});
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
@@ -28,28 +31,42 @@ const ManagerRegistration = () => {
     }
 
     try {
-      const response = await fetch('http://localhost:8000/api/register/manager/', {
+      const res = await authFetch('/register/manager', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
       });
-      const data = await response.json();
-      if (response.ok) {
-        setSuccess('Manager account created successfully.');
-        setFormData({
-          username: '',
-          email: '',
-          first_name: '',
-          last_name: '',
-          password: '',
-          confirm_password: ''
-        });
+      const data = await res.json();
+
+      if (res.ok) {
+        // If the backend returns tokens on registration
+        if (data.access && data.refresh) {
+          localStorage.setItem('accessToken', data.access);
+          localStorage.setItem('refreshToken', data.refresh);
+          localStorage.setItem('username', data.username || formData.username);
+          navigate('/dashboard');
+        } else {
+          // Otherwise, just show success and go to login
+          setSuccess('Manager account created successfully.');
+          setFormData({
+            username: '',
+            email: '',
+            first_name: '',
+            last_name: '',
+            password: '',
+            confirm_password: ''
+          });
+          navigate('/login');
+        }
       } else {
         setError(data.detail || 'Registration failed.');
       }
     } catch (err) {
       setError('An error occurred. Please try again.');
     }
+  };
+
+  const handleCancel = () => {
+    navigate('/login');
   };
 
   return (
@@ -135,6 +152,14 @@ const ManagerRegistration = () => {
             Register Manager
           </button>
         </form>
+        <div className="mt-4">
+          <button
+            onClick={handleCancel}
+            className="w-full bg-gray-500 text-white py-2 rounded hover:bg-gray-600"
+          >
+            Cancel
+          </button>
+        </div>
       </div>
     </div>
   );

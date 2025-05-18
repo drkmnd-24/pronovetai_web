@@ -24,7 +24,9 @@ const Login = () => {
 
       if (response.ok) {
         // Save the access token and username in localStorage
+        // localStorage.setItem('accessToken', data.access);
         localStorage.setItem('accessToken', data.access);
+        localStorage.setItem('refreshToken', data.refresh);
         localStorage.setItem('username', username);
         navigate('/dashboard');
       } else {

@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
+import { authFetch} from "../api";
 import TopNav from "./TopNav";
 import {
   useTable,
@@ -24,22 +25,19 @@ const BuildingsList = () => {
 
   // Fetch buildings on mount
   useEffect(() => {
-    const token = localStorage.getItem("accessToken");
-    fetch("http://127.0.0.1:8000/api/buildings/", {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`
-      }
-    })
-      .then(res => res.json())
-      .then(data => {
+    async function load() {
+      try {
+        const res = await authFetch('/buildings/');
+        if (!res.ok) throw new Error('Fetch failed');
+        const data = await res.json();
         setBuildings(data);
+      } catch {
+        setError('Error fetching buildings');
+      } finally {
         setLoading(false);
-      })
-      .catch(() => {
-        setError("Error fetching buildings");
-        setLoading(false);
-      });
+      }
+    }
+    load();
   }, []);
 
   // Accessor for contact name
