@@ -8,20 +8,34 @@ from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 
 
 class MyDateTimeField(models.DateTimeField):
+    def get_db_converters(self, connection):
+        """
+        Override Field.get_db_converters so that only our
+        `from_db_value` is ever run, and Django’s backend
+        doesn’t tack on its own converter that expects a real datetime.
+        """
+        return [self.from_db_value]
+
     def from_db_value(self, value, expression, connection):
+        """
+        Turn MySQL-returned strings into real datetimes once and for all.
+        """
         if value is None:
             return None
+
         if isinstance(value, str):
             dt = parse_datetime(value)
             if dt is None:
-                return super().from_db_value(value, expression, connection)
+                # fallback to Django’s normal string→datetime logic
+                return super().to_python(value)
             if settings.USE_TZ:
-                dt = timezone.make_aware(dt, self._get_connection_timezone(connection))
+                # make it timezone‐aware, using the DB’s tz if available
+                tz = getattr(connection, "timezone", timezone.get_current_timezone())
+                dt = timezone.make_aware(dt, tz)
             return dt
-        return value
 
-    def _get_connection_timezone(self, connection):
-        return getattr(connection, 'timezone', timezone.get_current_timezone())
+        # already a datetime
+        return value
 
 
 def validated_image_size(image):
@@ -62,16 +76,20 @@ class CustomUserManager(BaseUserManager):
 
 
 class User(AbstractBaseUser):
-    """
-    A truly custom user model pointing at your `pt_users` table,
-    with no BooleanField columns for is_active/is_staff in the DB.
-    """
     id = models.AutoField(primary_key=True, db_column='user_id')
     username = models.CharField(max_length=150, unique=True, db_column='user_login')
     password = models.CharField(max_length=128, db_column='user_pass')
     email = models.EmailField(db_column='user_email', blank=True)
     first_name = models.CharField(max_length=150, db_column='user_first_name', blank=True)
     last_name = models.CharField(max_length=150, db_column='user_last_name', blank=True)
+
+    last_login = MyDateTimeField(
+        db_column='last_login',
+        null=True,
+        blank=True,
+        help_text='When this user last logged in'
+    )
+
     date_joined = MyDateTimeField(
         db_column='user_registered',
         default=timezone.now,
@@ -83,7 +101,8 @@ class User(AbstractBaseUser):
         null=True, blank=True,
         db_column='created_user_id',
         related_name='users_created')
-    created_date = models.DateTimeField(
+
+    created_date = MyDateTimeField(
         db_column='created_date',
         auto_now_add=True
     )
@@ -94,7 +113,11 @@ class User(AbstractBaseUser):
         blank=True,
         db_column='edited_user_id',
         related_name='users_edited')
-    edited_date = models.DateTimeField(db_column='edited_date', auto_now=True)
+
+    edited_date = MyDateTimeField(
+        db_column='edited_date',
+        auto_now=True
+    )
 
     # link to your user-type table
     user_type = models.ForeignKey(
