@@ -7,10 +7,16 @@ from django.conf import settings
 class DatabaseOperations(MySQLOps):
     def convert_datetimefield_value(self, value, expression, connection):
         if isinstance(value, str):
-            dt = parse_datetime(value)
-            if dt is None:
+            if value.startswith('0000-00-00'):
                 return None
+
+            dt = parse_datetime(value)
+            if not dt:
+                return None
+
             if settings.USE_TZ:
-                dt = timezone.make_aware(dt, timezone.get_current_timezone())
-                return dt
+                tz = getattr(connection, 'timezone', timezone.get_current_timezone())
+                dt = timezone.make_aware(dt, tz)
+            return dt
+
         return super().convert_datetimefield_value(value, expression, connection)
