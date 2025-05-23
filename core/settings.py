@@ -107,7 +107,7 @@ WSGI_APPLICATION = "core.wsgi.application"
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
+        'ENGINE': 'core.db.backends.mysql',
         'NAME': 'pronovetai_db',
         'USER': 'root',
         'PASSWORD': 'D3c0d3r24!',
