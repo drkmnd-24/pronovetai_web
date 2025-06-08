@@ -242,7 +242,7 @@ class Building(models.Model):
     floor_area_ratio = BlankZeroDecimalField(max_digits=6, decimal_places=2,
                                              db_column='building_far',
                                              null=True, blank=True)
-    gross_floor_area = models.DecimalField(max_digits=10, decimal_places=2, db_column='unit_gfa')
+    gross_floor_area = models.DecimalField(max_digits=10, decimal_places=2, db_column='building_gfa')
     gross_leasable_area = BlankZeroDecimalField(max_digits=12, decimal_places=2,
                                                 db_column='building_gla',
                                                 null=True, blank=True)

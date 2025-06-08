@@ -189,15 +189,14 @@ class BuildingSerializer(serializers.ModelSerializer):
 
 
 class UnitSerializer(serializers.ModelSerializer):
-    class UnitSerializer(serializers.ModelSerializer):
-        building = serializers.CharField(source='building.name', read_only=True)
+    building_name = serializers.CharField(source='building.name', read_only=True)
 
-        class Meta:
-            model = Unit
-            fields = [
-                'id', 'name', 'building', 'floor',
-                'marketing_status', 'vacancy_status', 'foreclosed'
-            ]
+    class Meta:
+        model = Unit
+        fields = [
+            'id', 'name', 'building_name', 'floor',
+            'marketing_status', 'vacancy_status', 'foreclosed',
+        ]
 
 
 class ODFormSerializer(serializers.ModelSerializer):

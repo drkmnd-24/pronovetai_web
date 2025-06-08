@@ -103,7 +103,7 @@ class BuildingViewSet(viewsets.ModelViewSet):
 
 
 class UnitViewSet(viewsets.ModelViewSet):
-    queryset = Unit.objects.all()
+    queryset = Unit.objects.select_related('building')
     serializer_class = UnitSerializer
 
 
