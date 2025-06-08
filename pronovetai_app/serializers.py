@@ -13,6 +13,18 @@ from .models import (
     BuildingImage,
     UnitImage,
 )
+from decimal import Decimal, InvalidOperation
+
+
+class NullableDecimalField(serializers.DecimalField):
+    def to_representation(self, value):
+        # catch None or empty‐string
+        if value in (None, ""):
+            return None
+        try:
+            return super().to_representation(value)
+        except InvalidOperation:
+            return None
 
 
 class UserTypeSerializer(serializers.ModelSerializer):
@@ -191,6 +203,11 @@ class UnitSerializer(serializers.ModelSerializer):
 
 
 class ODFormSerializer(serializers.ModelSerializer):
+    ize_minimum = NullableDecimalField(max_digits=10, decimal_places=2, required=False, allow_null=True)
+    size_maximum = NullableDecimalField(max_digits=10, decimal_places=2, required=False, allow_null=True)
+    budget_minimum = NullableDecimalField(max_digits=10, decimal_places=2, required=False, allow_null=True)
+    budget_maximum = NullableDecimalField(max_digits=10, decimal_places=2, required=False, allow_null=True)
+
     class Meta:
         model = ODForm
         fields = '__all__'
@@ -198,6 +215,14 @@ class ODFormSerializer(serializers.ModelSerializer):
     def validate(self, data):
         ODForm(**data).clean()
         return data
+
+
+class NullableZeroDecimalField(serializers.DecimalField):
+    def to_representation(self, value):
+        if value == 0:
+            return None
+        return super().to_representation(value)
+
 
 
 class BuildingImageSerializer(serializers.ModelSerializer):

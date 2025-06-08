@@ -11,24 +11,26 @@ from django.contrib.contenttypes.models import ContentType
 
 class MyDateTimeField(models.DateTimeField):
     def get_db_converters(self, connection):
-        """
-        Override Field.get_db_converters so that only our
-        `from_db_value` is ever run, and Django’s backend
-        doesn’t tack on its own converter that expects a real datetime.
-        """
+        # Only run our from_db_value converter.
         return [self.from_db_value]
 
     def from_db_value(self, value, expression, connection):
         """
         Turn MySQL-returned strings into real datetimes once and for all.
+        Treat any '0000-00-00...' value as None.
         """
         if value is None:
             return None
 
+        # MySQL zero‐date sentinel:
+        if isinstance(value, str) and value.startswith('0000-00-00'):
+            return None
+
+        # Parse normal string form into datetime
         if isinstance(value, str):
             dt = parse_datetime(value)
             if dt is None:
-                # fallback to Django’s normal string→datetime logic
+                # fallback to Django’s normal parsing if parse_datetime fails
                 return super().to_python(value)
             if settings.USE_TZ:
                 # make it timezone‐aware, using the DB’s tz if available
@@ -36,8 +38,16 @@ class MyDateTimeField(models.DateTimeField):
                 dt = timezone.make_aware(dt, tz)
             return dt
 
-        # already a datetime
+        # Already a datetime instance
         return value
+
+    def to_python(self, value):
+        """
+        Also catch zero‐dates in Python-land (e.g. during model deserialization).
+        """
+        if isinstance(value, str) and value.startswith('0000-00-00'):
+            return None
+        return super().to_python(value)
 
 
 def validated_image_size(image):
@@ -348,8 +358,15 @@ class Company(models.Model):
 
 
 class ODForm(models.Model):
-    id = models.AutoField(primary_key=True, db_column='odform_id')
-    date = models.DateTimeField(db_column='date')
+    id = models.AutoField(
+        primary_key=True,
+        db_column='od_form_id'
+    )
+    # the timestamp when the form was created
+    created = MyDateTimeField(
+        db_column='od_form_created',
+        help_text='When this OD form was created'
+    )
     contact = models.ForeignKey(
         Contact,
         on_delete=models.SET_NULL,
@@ -358,44 +375,154 @@ class ODForm(models.Model):
         related_name='od_forms',
         db_column='contact_id'
     )
-    call_taken_by = models.CharField(max_length=255, null=True, blank=True)
-    TYPE_OF_CALL_CHOICES = [('inbound', 'Inbound'), ('outbound', 'Outbound')]
-    type_of_call = models.CharField(max_length=10, choices=TYPE_OF_CALL_CHOICES)
+    call_taken_by = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        db_column='od_form_call_taken'
+    )
+    TYPE_OF_CALL_CHOICES = [
+        ('inbound', 'Inbound'),
+        ('outbound', 'Outbound'),
+    ]
+    type_of_call = models.CharField(
+        max_length=10,
+        choices=TYPE_OF_CALL_CHOICES,
+        db_column='od_form_call_type'
+    )
     SOURCE_OF_CALL_CHOICES = [
-        ('newspaper', 'Newspaper'), ('old_client', 'Old Client'), ('online_marketing', 'Online Marketing'),
-        ('referral', 'Referral'), ('signage', 'Signage'), ('website', 'Website'), ('yellow_pages', 'Yellow Pages'),
+        ('newspaper', 'Newspaper'),
+        ('old_client', 'Old Client'),
+        ('online_marketing', 'Online Marketing'),
+        ('referral', 'Referral'),
+        ('signage', 'Signage'),
+        ('website', 'Website'),
+        ('yellow_pages', 'Yellow Pages'),
         ('others', 'Others'),
     ]
-    source_of_call = models.CharField(max_length=20, choices=SOURCE_OF_CALL_CHOICES)
-    TYPE_OF_CALLER_CHOICES = [('broker', 'Broker'), ('direct', 'Direct Buyer / Lease')]
-    type_of_caller = models.CharField(max_length=20, choices=TYPE_OF_CALLER_CHOICES)
-    INTENT_CHOICES = [('rent', 'To Rent'), ('buy', 'To Buy'), ('both', 'Both')]
-    intent = models.CharField(max_length=10, choices=INTENT_CHOICES)
-    PURPOSE_CHOICES = [
-        ('expanding', 'Expanding'), ('relocating', 'Relocating'), ('new_office', 'New Office'),
-        ('consolidating', 'Consolidating'), ('downsizing', 'Downsizing'), ('upgrading', 'Upgrading'),
-        ('expanding_retaining', 'Expanding while retaining'), ('others', 'Others'),
+    source_of_call = models.CharField(
+        max_length=20,
+        choices=SOURCE_OF_CALL_CHOICES,
+        db_column='od_form_call_source'
+    )
+    TYPE_OF_CALLER_CHOICES = [
+        ('broker', 'Broker'),
+        ('direct', 'Direct Buyer / Lease'),
     ]
-    purpose = models.CharField(max_length=30, choices=PURPOSE_CHOICES)
-    size_minimum = models.DecimalField(max_digits=10, decimal_places=2)
-    budget_minimum = models.DecimalField(max_digits=10, decimal_places=2)
-    prefered_location = models.CharField(max_length=100)
-    size_maximum = models.DecimalField(max_digits=10, decimal_places=2)
-    budget_maximum = models.DecimalField(max_digits=10, decimal_places=2)
-    started_scouting = models.BooleanField(default=False)
-    notes = models.TextField(blank=True, null=True)
+    type_of_caller = models.CharField(
+        max_length=20,
+        choices=TYPE_OF_CALLER_CHOICES,
+        db_column='od_form_caller_type'
+    )
+    INTENT_CHOICES = [
+        ('rent', 'To Rent'),
+        ('buy', 'To Buy'),
+        ('both', 'Both'),
+    ]
+    intent = models.CharField(
+        max_length=10,
+        choices=INTENT_CHOICES,
+        db_column='od_form_intent'
+    )
+    PURPOSE_CHOICES = [
+        ('expanding', 'Expanding'),
+        ('relocating', 'Relocating'),
+        ('new_office', 'New Office'),
+        ('consolidating', 'Consolidating'),
+        ('downsizing', 'Downsizing'),
+        ('upgrading', 'Upgrading'),
+        ('expanding_retaining', 'Expanding while retaining'),
+        ('others', 'Others'),
+    ]
+    purpose = models.CharField(
+        max_length=30,
+        choices=PURPOSE_CHOICES,
+        db_column='od_form_purpose'
+    )
+    size_minimum = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        db_column='od_form_size_min',
+        null=True, blank=True
+    )
+    size_maximum = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        db_column='od_form_size_max',
+        null=True, blank=True
+    )
+    budget_minimum = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        db_column='od_form_budget_min',
+        null=True, blank=True
+    )
+    budget_maximum = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        db_column='od_form_budget_max',
+        null=True, blank=True
+    )
+    preferred_location = models.CharField(
+        max_length=100,
+        db_column='od_form_preferred_loc',
+        null=True, blank=True
+    )
+    started_scouting = models.BooleanField(
+        default=False,
+        db_column='od_form_scouted',
+        null=True, blank=True
+    )
+    notes = models.TextField(
+        blank=True,
+        null=True,
+        db_column='od_form_notes'
+    )
+    STATUS_CHOICES = [
+        ('active', 'Active'),
+        ('inactive', 'Inactive'),
+        ('done_deal', 'Done Deal'),
+    ]
+    status = models.CharField(
+        max_length=10,
+        choices=STATUS_CHOICES,
+        default='active',
+        db_column='od_form_status'
+    )
+    # who the form is assigned to / created for
     account_manager = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name='od_forms',
-        db_column='account_manager_id'
+        db_column='user_id'
     )
-    STATUS_CHOICES = [('active', 'Active'), ('inactive', 'Inactive'), ('done_deal', 'Done Deal')]
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='active')
-    created_at = models.DateTimeField(auto_now_add=True, db_column='created_at')
-    updated_at = models.DateTimeField(auto_now=True, db_column='updated_at')
+    # track who created/edited the record
+    created_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='od_forms_created',
+        db_column='created_user_id'
+    )
+    created_date = MyDateTimeField(
+        auto_now_add=True,
+        db_column='created_date'
+    )
+    edited_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='od_forms_edited',
+        db_column='edited_user_id'
+    )
+    edited_date = MyDateTimeField(
+        auto_now=True,
+        db_column='edited_date'
+    )
 
     class Meta:
         db_table = 'pt_od_forms'
