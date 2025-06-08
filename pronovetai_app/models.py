@@ -186,7 +186,9 @@ class Building(models.Model):
 
     # ---------- basic facts ----------
     name = models.CharField(max_length=255, db_column='building_name')
-    year_built = models.PositiveIntegerField(db_column='building_year_built')
+    year_built = BlankZeroIntegerField(
+        db_column='building_year_built', null=True, blank=True
+    )
     is_peza_certified = models.BooleanField(db_column='building_peza')
     is_strata = models.BooleanField(db_column='building_strata')
 
@@ -211,26 +213,41 @@ class Building(models.Model):
         max_digits=10, decimal_places=2, db_column='building_plate_area',
         null=True, blank=True
     )
-    floor_to_ceiling_height = models.DecimalField(
-        max_digits=5, decimal_places=2, db_column='building_f2ch'
+    floor_to_ceiling_height = BlankZeroDecimalField(
+        max_digits=5, decimal_places=2, db_column='building_f2ch',
+        null=True, blank=True
     )
-    number_of_floors = BlankZeroIntegerField(db_column='building_total_level', null=True, blank=True)
-    parking_floors = BlankZeroIntegerField(db_column='building_parking_level', null=True, blank=True)
-    passenger_elevators = BlankZeroIntegerField(db_column='building_pass_lift', null=True, blank=True)
-    service_elevators = BlankZeroIntegerField(db_column='building_service_lift', null=True, blank=True)
+    number_of_floors = BlankZeroIntegerField(db_column='building_total_level',
+                                             null=True, blank=True)
+    parking_floors = BlankZeroIntegerField(db_column='building_parking_level',
+                                           null=True, blank=True)
+    passenger_elevators = BlankZeroIntegerField(db_column='building_pass_lift',
+                                                null=True, blank=True)
+    service_elevators = BlankZeroIntegerField(db_column='building_service_lift',
+                                              null=True, blank=True)
 
     # ---------- air-con & rents ----------
     ac_type = models.CharField(max_length=50, db_column='building_ac_type')
-    ac_operating_hours_charge = models.DecimalField(
-        max_digits=10, decimal_places=2, db_column='building_ac_ophrs_chg'
+    ac_operating_hours_charge = BlankZeroDecimalField(
+        max_digits=10, decimal_places=2, db_column='building_ac_ophrs_chg',
+        null=True, blank=True
     )
-    office_rent = models.DecimalField(max_digits=10, decimal_places=2, db_column='building_office_rent')
-    association_dues = models.DecimalField(max_digits=10, decimal_places=2, db_column='building_assoc_dues')
+    office_rent = BlankZeroDecimalField(max_digits=10, decimal_places=2,
+                                        db_column='building_office_rent',
+                                        null=True, blank=True)
+    association_dues = BlankZeroDecimalField(max_digits=10, decimal_places=2,
+                                             db_column='building_assoc_dues',
+                                             null=True, blank=True)
 
-    # ---------- area ratios ----------
-    floor_area_ratio = models.DecimalField(max_digits=6, decimal_places=2, db_column='building_far')
-    gross_floor_area = models.DecimalField(max_digits=12, decimal_places=2, db_column='building_gfa')
-    gross_leasable_area = models.DecimalField(max_digits=12, decimal_places=2, db_column='building_gla')
+    floor_area_ratio = BlankZeroDecimalField(max_digits=6, decimal_places=2,
+                                             db_column='building_far',
+                                             null=True, blank=True)
+    gross_floor_area = BlankZeroDecimalField(max_digits=12, decimal_places=2,
+                                             db_column='building_gfa',
+                                             null=True, blank=True)
+    gross_leasable_area = BlankZeroDecimalField(max_digits=12, decimal_places=2,
+                                                db_column='building_gla',
+                                                null=True, blank=True)
 
     # ---------- address split over four columns ----------
     address_street = models.CharField(max_length=255, db_column='building_address_street', blank=True, null=True)
