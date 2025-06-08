@@ -1,108 +1,83 @@
-import React, { useEffect, useState, useMemo } from "react";
-import { authFetch} from "../api";
-import TopNav from "./TopNav";
+// src/components/BuildingsList.js
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   useTable,
   useSortBy,
   usePagination,
   useGlobalFilter
-} from "react-table";
+} from 'react-table';
+import TopNav     from './TopNav';
+import { authFetch } from '../api';
 
-// Global filter component
-const GlobalFilter = ({ filter, setFilter }) => (
-  <input
-    value={filter || ""}
-    onChange={e => setFilter(e.target.value || undefined)}
-    placeholder="Search by Building Name"
-    className="border border-gray-300 p-2 rounded w-1/2"
-  />
-);
+/* ––––– global search input ––––– */
+function GlobalFilter({ filter, setFilter }) {
+  return (
+    <input
+      className="border border-gray-300 p-2 rounded w-1/2"
+      placeholder="Search by building name"
+      value={filter || ''}
+      onChange={e => setFilter(e.target.value || undefined)}
+    />
+  );
+}
 
-const BuildingsList = () => {
+/* ––––– main component ––––– */
+export default function BuildingsList() {
   const [buildings, setBuildings] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [loading,   setLoading]   = useState(true);
+  const [error,     setError]     = useState('');
 
-  // Fetch buildings on mount
+  /* fetch once on mount */
   useEffect(() => {
-    async function load() {
+    (async () => {
       try {
-        const res = await authFetch('/buildings/');
-        if (!res.ok) throw new Error('Fetch failed');
-        const data = await res.json();
+        const { data } = await authFetch({ method: 'get', url: 'buildings/' });
         setBuildings(data);
       } catch {
         setError('Error fetching buildings');
       } finally {
         setLoading(false);
       }
-    }
-    load();
+    })();
   }, []);
 
-  // Accessor for contact name
-  const getContactName = building => {
-    if (building.contacts && building.contacts.length) {
-      const owner = building.contacts.find(c => c.contact_type === "owner");
-      const contact = owner || building.contacts[0];
-      return `${contact.first_name || ""} ${contact.last_name || ""}`.trim();
-    }
-    return "N/A";
+  /* helper for prettifying contacts */
+  const contactName = b => {
+    if (!b.contacts?.length) return 'N/A';
+    const owner = b.contacts.find(c => c.contact_type === 'owner');
+    const c     = owner || b.contacts[0];
+    return `${c.first_name || ''} ${c.last_name || ''}`.trim() || c.email || 'N/A';
   };
 
-  // Define columns
-  const columns = useMemo(
-    () => [
-      {
-        Header: "Building Name",
-        accessor: "name"
-      },
-      {
-        Header: "Address",
-        accessor: row =>
-          row.address
-            ? `${row.address.street_address}, ${row.address.city}`
-            : "No address",
-        id: "address"
-      },
-      {
-        Header: "Type",
-        accessor: "building_type"
-      },
-      {
-        Header: "Contact",
-        accessor: getContactName,
-        id: "contact"
-      },
-      {
-        Header: "Grade",
-        accessor: "grade"
-      },
-      {
-        Header: "PEZA Certified",
-        accessor: row => (row.is_peza_certified ? "Yes" : "No"),
-        id: "peza"
-      },
-      {
-        Header: "Strata",
-        accessor: row => (row.is_strata ? "Yes" : "No"),
-        id: "strata"
-      }
-    ],
-    []
-  );
+  /* columns definition (memoised) */
+  const columns = useMemo(() => [
+    { Header: 'Building', accessor: 'name' },
+    {
+      Header: 'Address',
+      accessor: row =>
+        row.address
+          ? `${row.address.street_address || ''}, ${row.address.city || ''}`.replace(/^, /, '') || 'No address'
+          : 'No address',
+      id: 'address'
+    },
+    { Header: 'Type',  accessor: 'building_type' },
+    { Header: 'Contact', accessor: contactName, id: 'contact' },
+    { Header: 'Grade',   accessor: 'grade' },
+    { Header: 'PEZA',    accessor: r => (r.is_peza_certified ? 'Yes' : 'No'), id: 'peza' },
+    { Header: 'Strata',  accessor: r => (r.is_strata         ? 'Yes' : 'No'), id: 'strata' }
+  ], []);
 
   const data = useMemo(() => buildings, [buildings]);
 
-  // Create table instance
+  /* react-table instance */
   const {
     getTableProps,
     getTableBodyProps,
     headerGroups,
     page,
-    prepareRow,
     state,
-    setGlobalFilter,
+    prepareRow,
+    // pagination helpers
     canPreviousPage,
     canNextPage,
     pageOptions,
@@ -110,22 +85,20 @@ const BuildingsList = () => {
     gotoPage,
     nextPage,
     previousPage,
-    setPageSize
+    setPageSize,
+    setGlobalFilter
   } = useTable(
-    {
-      columns,
-      data,
-      initialState: { pageIndex: 0, pageSize: 10 }
-    },
+    { columns, data, initialState: { pageSize: 10 } },
     useGlobalFilter,
     useSortBy,
     usePagination
   );
 
-  const { globalFilter, pageIndex, pageSize } = state;
+  const { pageIndex, pageSize, globalFilter } = state;
 
-  if (loading) return <div className="container mx-auto p-4">Loading...</div>;
-  if (error) return <div className="container mx-auto p-4 text-red-600">{error}</div>;
+  /* ––– render ––– */
+  if (loading) return <Centered>Loading…</Centered>;
+  if (error)   return <Centered className="text-red-600">{error}</Centered>;
 
   return (
     <div>
@@ -133,34 +106,25 @@ const BuildingsList = () => {
       <div className="container mx-auto p-4">
         <h1 className="text-2xl font-bold mb-4">Buildings ({data.length})</h1>
 
+        {/* search + record count */}
         <div className="mb-4 flex justify-between items-center">
           <GlobalFilter filter={globalFilter} setFilter={setGlobalFilter} />
-          <div className="text-lg">Total Records: {data.length}</div>
+          <span className="text-lg">Total Records: {data.length}</span>
         </div>
 
+        {/* table */}
         <div className="overflow-x-auto">
-          <table
-            {...getTableProps()}
-            className="min-w-full bg-white border rounded"
-          >
+          <table {...getTableProps()} className="min-w-full bg-white border rounded">
             <thead className="bg-gray-200">
-              {headerGroups.map(headerGroup => (
-                <tr {...headerGroup.getHeaderGroupProps()}>
-                  {headerGroup.headers.map(column => (
+              {headerGroups.map(hg => (
+                <tr {...hg.getHeaderGroupProps()}>
+                  {hg.headers.map(col => (
                     <th
-                      {...column.getHeaderProps(
-                        column.getSortByToggleProps()
-                      )}
-                      className="py-2 px-4 border text-left cursor-pointer"
+                      {...col.getHeaderProps(col.getSortByToggleProps())}
+                      className="py-2 px-4 border text-left cursor-pointer select-none"
                     >
-                      {column.render("Header")}
-                      <span>
-                        {column.isSorted
-                          ? column.isSortedDesc
-                            ? " 🔽"
-                            : " 🔼"
-                          : ""}
-                      </span>
+                      {col.render('Header')}
+                      {col.isSorted ? (col.isSortedDesc ? ' 🔽' : ' 🔼') : ''}
                     </th>
                   ))}
                 </tr>
@@ -172,11 +136,8 @@ const BuildingsList = () => {
                 return (
                   <tr {...row.getRowProps()} className="border-t">
                     {row.cells.map(cell => (
-                      <td
-                        {...cell.getCellProps()}
-                        className="py-2 px-4"
-                      >
-                        {cell.render("Cell")}
+                      <td {...cell.getCellProps()} className="py-2 px-4">
+                        {cell.render('Cell')}
                       </td>
                     ))}
                   </tr>
@@ -186,60 +147,45 @@ const BuildingsList = () => {
           </table>
         </div>
 
+        {/* pagination controls */}
         <div className="flex justify-between items-center mt-4">
           <div>
-            <button
-              onClick={() => gotoPage(0)}
-              disabled={!canPreviousPage}
-              className="px-3 py-1 bg-gray-300 rounded mr-2 disabled:opacity-50"
-            >
-              {'<<'}
-            </button>
-            <button
-              onClick={() => previousPage()}
-              disabled={!canPreviousPage}
-              className="px-3 py-1 bg-gray-300 rounded disabled:opacity-50"
-            >
-              Previous
-            </button>
+            <NavButton onClick={() => gotoPage(0)} disabled={!canPreviousPage}>{'<<'}</NavButton>
+            <NavButton onClick={previousPage}     disabled={!canPreviousPage}>Previous</NavButton>
           </div>
+
           <span>
-            Page{' '}
-            <strong>
-              {pageIndex + 1} of {pageOptions.length}
-            </strong>
+            Page <strong>{pageIndex + 1} of {pageOptions.length}</strong>
           </span>
+
           <div>
-            <button
-              onClick={() => nextPage()}
-              disabled={!canNextPage}
-              className="px-3 py-1 bg-gray-300 rounded mr-2 disabled:opacity-50"
-            >
-              Next
-            </button>
-            <button
-              onClick={() => gotoPage(pageCount - 1)}
-              disabled={!canNextPage}
-              className="px-3 py-1 bg-gray-300 rounded disabled:opacity-50"
-            >
-              {'>>'}
-            </button>
+            <NavButton onClick={nextPage}          disabled={!canNextPage}>Next</NavButton>
+            <NavButton onClick={() => gotoPage(pageCount - 1)} disabled={!canNextPage}>{'>>'}</NavButton>
           </div>
+
           <select
+            className="border p-2 rounded"
             value={pageSize}
             onChange={e => setPageSize(Number(e.target.value))}
-            className="border p-2 rounded"
           >
-            {[10, 20, 50].map(size => (
-              <option key={size} value={size}>
-                Show {size}
-              </option>
-            ))}
+            {[10, 20, 50].map(s => <option key={s} value={s}>Show {s}</option>)}
           </select>
         </div>
       </div>
     </div>
   );
-};
+}
 
-export default BuildingsList;
+/* small helpers */
+const NavButton = ({ children, ...rest }) => (
+  <button
+    {...rest}
+    className="px-3 py-1 bg-gray-300 rounded mr-2 disabled:opacity-50"
+  >
+    {children}
+  </button>
+);
+
+function Centered({ children, className = '' }) {
+  return <div className={`container mx-auto p-4 text-center ${className}`}>{children}</div>;
+}

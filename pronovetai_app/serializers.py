@@ -58,9 +58,9 @@ class StaffRegistrationSerializer(serializers.ModelSerializer):
         user = User.objects.create_user(
             username=validated_data['username'],
             password=validated_data['password'],
-            email=validated_data.get('email',''),
-            first_name=validated_data.get('first_name',''),
-            last_name=validated_data.get('last_name',''),
+            email=validated_data.get('email', ''),
+            first_name=validated_data.get('first_name', ''),
+            last_name=validated_data.get('last_name', ''),
             user_type=user_type,
             created_by=creator
         )
@@ -90,9 +90,9 @@ class ManagerRegistrationSerializer(serializers.ModelSerializer):
         user = User.objects.create_user(
             username=validated_data['username'],
             password=validated_data['password'],
-            email=validated_data.get('email',''),
-            first_name=validated_data.get('first_name',''),
-            last_name=validated_data.get('last_name',''),
+            email=validated_data.get('email', ''),
+            first_name=validated_data.get('first_name', ''),
+            last_name=validated_data.get('last_name', ''),
             user_type=manager_type,
             created_by=creator,
             is_staff=True
@@ -166,18 +166,15 @@ class ContactSerializer(serializers.ModelSerializer):
 
 
 class BuildingSerializer(serializers.ModelSerializer):
-    address = AddressSerializer(required=False, allow_null=True)
+    address = serializers.CharField(read_only=True)  # uses the @property above
 
     class Meta:
         model = Building
-        fields = '__all__'
-
-    def create(self, validated_data):
-        addr_data = validated_data.pop('address', None)
-        if addr_data:
-            addr = Address.objects.create(**addr_data)
-            validated_data['address'] = addr
-        return Building.objects.create(**validated_data)
+        fields = [
+            'id', 'name', 'grade', 'building_type',
+            'is_peza_certified', 'is_strata',
+            'year_built', 'address'
+        ]
 
     def update(self, instance, validated_data):
         addr_data = validated_data.pop('address', None)
@@ -222,7 +219,6 @@ class NullableZeroDecimalField(serializers.DecimalField):
         if value == 0:
             return None
         return super().to_representation(value)
-
 
 
 class BuildingImageSerializer(serializers.ModelSerializer):

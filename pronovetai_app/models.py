@@ -8,6 +8,8 @@ from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 
+from .fields import BlankZeroIntegerField, BlankZeroDecimalField
+
 
 class MyDateTimeField(models.DateTimeField):
     def get_db_converters(self, connection):
@@ -180,46 +182,68 @@ class Contact(models.Model):
 
 
 class Building(models.Model):
-    iid = models.AutoField(primary_key=True, db_column='building_id')
-    name = models.CharField(max_length=255)
-    address = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True, blank=True,
-                                related_name='buildings', db_column='address_id')
-    year_built = models.PositiveIntegerField()
-    is_for_sale = models.BooleanField(default=False)
-    is_peza_certified = models.BooleanField(default=False)
-    is_strata = models.BooleanField(default=False)
-    grade = models.ForeignKey('BuildingGrade', on_delete=models.SET_NULL, null=True,
-                              db_column='grade_id', related_name='+')
-    typical_floor_plate_area = models.DecimalField(max_digits=10, decimal_places=2)
-    floor_to_ceiling_height = models.DecimalField(max_digits=5, decimal_places=2)
-    number_of_floors = models.PositiveIntegerField()
-    parking_floors = models.PositiveIntegerField()
-    passenger_elevators = models.PositiveIntegerField()
-    service_elevators = models.PositiveIntegerField()
-    ac_type = models.CharField(max_length=50)
-    ac_operating_hours_charge = models.DecimalField(max_digits=10, decimal_places=2)
-    office_rent = models.DecimalField(max_digits=10, decimal_places=2)
-    association_dues = models.DecimalField(max_digits=10, decimal_places=2)
-    floor_area_ratio = models.DecimalField(max_digits=4, decimal_places=2)
-    gross_floor_area = models.DecimalField(max_digits=10, decimal_places=2)
-    gross_leasable_area = models.DecimalField(max_digits=10, decimal_places=2)
-    building_type = models.ForeignKey('BuildingType', on_delete=models.SET_NULL, null=True,
-                                      db_column='type_id', related_name='+')
-    space_for_lease = models.DecimalField(max_digits=10, decimal_places=2)
-    space_for_sale = models.DecimalField(max_digits=10, decimal_places=2)
-    space_occupied = models.DecimalField(max_digits=10, decimal_places=2)
-    contacts = models.ManyToManyField(Contact, blank=True, related_name='buildings',
-                                      db_table='pt_building_contacts')
-    created_by = models.ForeignKey(
-        User,
+    id = models.AutoField(primary_key=True, db_column='building_id')
+
+    # ---------- basic facts ----------
+    name = models.CharField(max_length=255, db_column='building_name')
+    year_built = models.PositiveIntegerField(db_column='building_year_built')
+    is_peza_certified = models.BooleanField(db_column='building_peza')
+    is_strata = models.BooleanField(db_column='building_strata')
+
+    # look-up tables (same as before)
+    grade = models.ForeignKey(
+        'BuildingGrade',
         on_delete=models.SET_NULL,
         null=True,
-        related_name='buildings_created',
-        db_column='created_user_id'
+        db_column='building_grade',  # <- matches MySQL
+        related_name='+'
     )
-    created_at = models.DateTimeField(auto_now_add=True, db_column='created_date')
-    last_edited = models.DateTimeField(auto_now=True, db_column='edited_date')
+    building_type = models.ForeignKey(
+        'BuildingType',
+        on_delete=models.SET_NULL,
+        null=True,
+        db_column='building_type',  # <- matches MySQL
+        related_name='+'
+    )
 
+    # ---------- size / vertical transport ----------
+    typical_floor_plate_area = BlankZeroDecimalField(
+        max_digits=10, decimal_places=2, db_column='building_plate_area',
+        null=True, blank=True
+    )
+    floor_to_ceiling_height = models.DecimalField(
+        max_digits=5, decimal_places=2, db_column='building_f2ch'
+    )
+    number_of_floors = BlankZeroIntegerField(db_column='building_total_level', null=True, blank=True)
+    parking_floors = BlankZeroIntegerField(db_column='building_parking_level', null=True, blank=True)
+    passenger_elevators = BlankZeroIntegerField(db_column='building_pass_lift', null=True, blank=True)
+    service_elevators = BlankZeroIntegerField(db_column='building_service_lift', null=True, blank=True)
+
+    # ---------- air-con & rents ----------
+    ac_type = models.CharField(max_length=50, db_column='building_ac_type')
+    ac_operating_hours_charge = models.DecimalField(
+        max_digits=10, decimal_places=2, db_column='building_ac_ophrs_chg'
+    )
+    office_rent = models.DecimalField(max_digits=10, decimal_places=2, db_column='building_office_rent')
+    association_dues = models.DecimalField(max_digits=10, decimal_places=2, db_column='building_assoc_dues')
+
+    # ---------- area ratios ----------
+    floor_area_ratio = models.DecimalField(max_digits=6, decimal_places=2, db_column='building_far')
+    gross_floor_area = models.DecimalField(max_digits=12, decimal_places=2, db_column='building_gfa')
+    gross_leasable_area = models.DecimalField(max_digits=12, decimal_places=2, db_column='building_gla')
+
+    # ---------- address split over four columns ----------
+    address_street = models.CharField(max_length=255, db_column='building_address_street', blank=True, null=True)
+    address_brgy = models.CharField(max_length=100, db_column='building_address_brgy', blank=True, null=True)
+    address_city = models.CharField(max_length=100, db_column='building_address_city', blank=True, null=True)
+    address_zip = models.CharField(max_length=20, db_column='building_address_zip', blank=True, null=True)
+
+    @property
+    def address(self):
+        parts = [self.address_street, self.address_brgy, self.address_city]
+        return ", ".join(p for p in parts if p)
+
+    # ---------- meta ----------
     class Meta:
         db_table = 'pt_buildings'
         managed = False
