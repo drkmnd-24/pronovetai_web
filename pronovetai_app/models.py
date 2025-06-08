@@ -5,6 +5,8 @@ from django.utils import timezone
 from django.conf import settings
 from django.utils.dateparse import parse_datetime
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 
 
 class MyDateTimeField(models.DateTimeField):
@@ -82,53 +84,16 @@ class User(AbstractBaseUser):
     email = models.EmailField(db_column='user_email', blank=True)
     first_name = models.CharField(max_length=150, db_column='user_first_name', blank=True)
     last_name = models.CharField(max_length=150, db_column='user_last_name', blank=True)
-
-    last_login = MyDateTimeField(
-        db_column='last_login',
-        null=True,
-        blank=True,
-        help_text='When this user last logged in'
-    )
-
-    date_joined = MyDateTimeField(
-        db_column='user_registered',
-        default=timezone.now,
-        help_text='When this user was created'
-    )
-    created_by = models.ForeignKey(
-        'self',
-        on_delete=models.SET_NULL,
-        null=True, blank=True,
-        db_column='created_user_id',
-        related_name='users_created')
-
-    created_date = MyDateTimeField(
-        db_column='created_date',
-        auto_now_add=True
-    )
-    edited_by = models.ForeignKey(
-        'self',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        db_column='edited_user_id',
-        related_name='users_edited')
-
-    edited_date = MyDateTimeField(
-        db_column='edited_date',
-        auto_now=True
-    )
-
-    # link to your user-type table
-    user_type = models.ForeignKey(
-        'UserType',
-        on_delete=models.SET_NULL,
-        null=True,
-        db_column='user_type_id',
-        related_name='users'
-    )
-
-    # **no** BooleanField columns in the DB; just Python flags:
+    last_login = MyDateTimeField(db_column='last_login', null=True, blank=True)
+    date_joined = MyDateTimeField(db_column='user_registered', default=timezone.now)
+    created_by = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True,
+                                   db_column='created_user_id', related_name='users_created')
+    created_date = MyDateTimeField(db_column='created_date', auto_now_add=True)
+    edited_by = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True,
+                                  db_column='edited_user_id', related_name='users_edited')
+    edited_date = MyDateTimeField(db_column='edited_date', auto_now=True)
+    user_type = models.ForeignKey(UserType, on_delete=models.SET_NULL, null=True,
+                                  db_column='user_type_id', related_name='users')
     is_active = True
     is_staff = False
 
@@ -141,31 +106,12 @@ class User(AbstractBaseUser):
         db_table = 'pt_users'
         managed = False
 
-    def get_full_name(self):
-        return f"{self.first_name} {self.last_name}".strip()
-
-    def get_short_name(self):
-        return self.first_name or self.username
-
-    # Django (and SimpleJWT) will check these:
-    def has_perm(self, perm, obj=None):
-        # only “staff” can do admin-style things
-        return bool(self.is_staff)
-
-    def has_module_perms(self, app_label):
-        return bool(self.is_staff)
-
     def __str__(self):
         return self.username
 
 
 class UserLog(models.Model):
-    user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='logs',
-        db_column='user_id'
-    )
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='logs', db_column='user_id')
     message = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
 
@@ -191,14 +137,8 @@ class Address(models.Model):
 
 
 class Contact(models.Model):
-    company = models.ForeignKey(
-        'Company',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='contacts',
-        db_column='company_id'
-    )
+    company = models.ForeignKey('Company', on_delete=models.SET_NULL, null=True, blank=True,
+                                related_name='contacts', db_column='company_id')
     title = models.CharField(max_length=100, null=True, blank=True)
     first_name = models.CharField(max_length=100, null=True, blank=True)
     last_name = models.CharField(max_length=100, null=True, blank=True)
@@ -226,27 +166,20 @@ class Contact(models.Model):
         managed = False
 
     def __str__(self):
-        if self.first_name or self.last_name:
-            return f"{self.first_name} {self.last_name}".strip()
-        return self.email
+        return self.email or ''
 
 
 class Building(models.Model):
-    id = models.AutoField(primary_key=True, db_column='building_id')
+    iid = models.AutoField(primary_key=True, db_column='building_id')
     name = models.CharField(max_length=255)
-    address = models.ForeignKey(
-        Address,
-        on_delete=models.SET_NULL,
-        blank=True,
-        null=True,
-        related_name='buildings',
-        db_column='address_id'
-    )
+    address = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True, blank=True,
+                                related_name='buildings', db_column='address_id')
     year_built = models.PositiveIntegerField()
     is_for_sale = models.BooleanField(default=False)
     is_peza_certified = models.BooleanField(default=False)
     is_strata = models.BooleanField(default=False)
-    grade = models.CharField(max_length=50)
+    grade = models.ForeignKey('BuildingGrade', on_delete=models.SET_NULL, null=True,
+                              db_column='grade_id', related_name='+')
     typical_floor_plate_area = models.DecimalField(max_digits=10, decimal_places=2)
     floor_to_ceiling_height = models.DecimalField(max_digits=5, decimal_places=2)
     number_of_floors = models.PositiveIntegerField()
@@ -260,16 +193,13 @@ class Building(models.Model):
     floor_area_ratio = models.DecimalField(max_digits=4, decimal_places=2)
     gross_floor_area = models.DecimalField(max_digits=10, decimal_places=2)
     gross_leasable_area = models.DecimalField(max_digits=10, decimal_places=2)
-    building_type = models.CharField(max_length=50)
+    building_type = models.ForeignKey('BuildingType', on_delete=models.SET_NULL, null=True,
+                                      db_column='type_id', related_name='+')
     space_for_lease = models.DecimalField(max_digits=10, decimal_places=2)
     space_for_sale = models.DecimalField(max_digits=10, decimal_places=2)
     space_occupied = models.DecimalField(max_digits=10, decimal_places=2)
-    contacts = models.ManyToManyField(
-        Contact,
-        blank=True,
-        related_name='buildings',
-        db_table='pt_building_contacts'
-    )
+    contacts = models.ManyToManyField(Contact, blank=True, related_name='buildings',
+                                      db_table='pt_building_contacts')
     created_by = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,
@@ -286,6 +216,30 @@ class Building(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class BuildingGrade(models.Model):
+    id = models.AutoField(primary_key=True, db_column='grade_id')
+    description = models.CharField(max_length=50)
+
+    class Meta:
+        db_table = 'pt_building_grades'
+        managed = False
+
+    def __str__(self):
+        return self.description
+
+
+class BuildingType(models.Model):
+    id = models.AutoField(primary_key=True, db_column='type_id')
+    description = models.CharField(max_length=50)
+
+    class Meta:
+        db_table = 'pt_building_types'
+        managed = False
+
+    def __str__(self):
+        return self.description
 
 
 class Unit(models.Model):
@@ -337,6 +291,8 @@ class Unit(models.Model):
     dues = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     sale_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     sale_parking = models.CharField(max_length=50, null=True, blank=True)
+    contacts = models.ManyToManyField(Contact, blank=True, related_name='units',
+                                      db_table='pt_unit_contacts')
 
     class Meta:
         db_table = 'pt_units'
@@ -442,7 +398,7 @@ class ODForm(models.Model):
     updated_at = models.DateTimeField(auto_now=True, db_column='updated_at')
 
     class Meta:
-        db_table = 'pt_odforms'
+        db_table = 'pt_od_forms'
         managed = False
 
     def clean(self):
@@ -453,6 +409,18 @@ class ODForm(models.Model):
 
     def __str__(self):
         return f"OD Form {self.id} – {self.contact}"
+
+
+class Note(models.Model):
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    content_object = GenericForeignKey('content_type', 'object_id')
+    text = models.TextField(db_column='note_text')
+    created_at = models.DateTimeField(db_column='created_at')
+
+    class Meta:
+        db_table = 'pt_notes'
+        managed = False
 
 
 class BuildingImage(models.Model):
@@ -487,3 +455,14 @@ class UnitImage(models.Model):
 
     def __str__(self):
         return f"Image for {self.unit.name}"
+
+
+class Image(models.Model):
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    content_object = GenericForeignKey('content_type', 'object_id')
+    image = models.ImageField(upload_to='images/', validators=[validated_image_size])
+
+    class Meta:
+        db_table = 'pt_images'
+        managed = False

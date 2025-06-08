@@ -6,7 +6,7 @@ from pronovetai_app.views import (
     AddressViewSet, UserViewSet, CompanyViewSet, ContactViewSet,
     BuildingViewSet, UnitViewSet, ODFormViewSet, BuildingImageViewSet,
     UnitImageViewSet, StaffRegistrationView, ManagerRegistrationView,
-    CurrentUserLogsView, ChangePasswordView
+    CurrentUserLogsView, ChangePasswordView, dashboard
 )
 
 router = routers.DefaultRouter()
@@ -31,4 +31,6 @@ urlpatterns = [
     path('api/users/me/', UserViewSet.as_view(), name='current_user'),
     path('api/users/me/logs', CurrentUserLogsView.as_view(), name='current_user_logs'),
     path('api/users/me/change_password/', ChangePasswordView.as_view(), name='change_password'),
+
+    path('api/dashboard/', dashboard, name='dashboard'),
 ]

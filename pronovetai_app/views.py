@@ -1,11 +1,13 @@
 from rest_framework import viewsets, generics, permissions
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import (
     Address, User, Company, Contact, Building, Unit, ODForm,
-    BuildingImage, UnitImage, UserLog
+    BuildingImage, UnitImage
 )
 from .serializers import (
     AddressSerializer, UserSerializer, CompanySerializer, ContactSerializer,
@@ -13,6 +15,18 @@ from .serializers import (
     UnitImageSerializer, StaffRegistrationSerializer, ManagerRegistrationSerializer,
     UserLogSerializer, ChangePasswordSerializer
 )
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def dashboard(request):
+    return Response({
+        'buildings': Building.objects.count(),
+        'units': Unit.objects.count(),
+        'companies': Company.objects.count(),
+        'contact': Contact.objects.count(),
+        'odforms': ODForm.objects.count(),
+    })
 
 
 class StaffRegistrationView(generics.CreateAPIView):
