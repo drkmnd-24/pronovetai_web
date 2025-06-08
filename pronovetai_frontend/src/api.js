@@ -1,50 +1,61 @@
 // src/api.js
-const API_BASE = 'http://127.0.0.1:8000/api';
+import axios from 'axios';
 
+const API_BASE = process.env.REACT_APP_API_BASE || 'http://127.0.0.1:8000/api';
+const API      = axios.create({
+  baseURL: API_BASE + '/',
+  headers: { 'Content-Type': 'application/json' }
+});
+
+// — Helpers ----------------------------------------------------------------
 export async function refreshAccessToken() {
-    const refresh = localStorage.getItem('refreshToken');
-    if (!refresh) return null;
+  const refresh = localStorage.getItem('refreshToken');
+  if (!refresh) return null;
 
-    const resp = await fetch(`${API_BASE}/token/refresh`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refresh }),
-    });
-
-    if (!resp.ok) return null;
-    const { access } = await resp.json();
-    localStorage.setItem('accessToken', access);
-    return access;
+  try {
+    const { data } = await API.post('token/refresh/', { refresh });
+    localStorage.setItem('accessToken', data.access);
+    return data.access;
+  } catch {
+    return null;
+  }
 }
 
-export async function authFetch(url, options = {}) {
-    let token = localStorage.getItem('accessToken');
-    let res = await fetch(url, {
-        ...options,
-        headers: {
-            'Content-Type': 'application/json',
-            ...(options.headers || {}),
-            ...(token ? { Authorization: `Bearer ${token}`} : {}),
-        },
-    });
-        // if token expired, try to refresh once and retry
-    if (res.status === 401) {
-        const newToken = await refreshAccessToken();
-        if (!newToken) {
-            // no valid refresh > force logout
-            localStorage.clear();
-            window.location.href = '/login';
-            return;
-        }
-        // retry original request with new token
-        res = await fetch(url, {
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...(options.headers || {}),
-                Authorization: `Bearer ${newToken}`,
-            },
-        });
+export async function authFetch(config) {
+  // merge in the access token header
+  const token = localStorage.getItem('accessToken');
+  const cfg   = {
+    ...config,
+    headers: {
+      ...(config.headers || {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  };
+
+  try {
+    return await API.request(cfg);
+  } catch (err) {
+    if (err.response?.status !== 401) throw err;
+
+    // on 401, try silent refresh
+    const newToken = await refreshAccessToken();
+    if (!newToken) {
+      localStorage.clear();
+      window.location.href = '/login';
+      return;
     }
-    return res;
+
+    return API.request({
+      ...cfg,
+      headers: {
+        ...cfg.headers,
+        Authorization: `Bearer ${newToken}`,
+      },
+    });
+  }
 }
+
+// — Exports ----------------------------------------------------------------
+// named:   refreshAccessToken, authFetch
+// default: the raw axios instance (API)
+export default API;
