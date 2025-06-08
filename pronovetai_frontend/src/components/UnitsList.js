@@ -1,200 +1,245 @@
-import React, { useEffect, useState, useMemo } from "react";
-import { authFetch } from "../api";
-import TopNav from "./TopNav";
+// src/pages/UnitList.js
+import React, {
+  useEffect,
+  useState,
+  useCallback,
+  useRef,
+  useMemo,
+} from 'react';
 import {
   useTable,
-  useSortBy,
   usePagination,
-  useGlobalFilter
-} from "react-table";
+  useSortBy,
+  useGlobalFilter,
+} from 'react-table';
+import TopNav from './TopNav';
+import { authFetch } from '../api';
 
-// Global search input component
+/* ---------- global search (placeholder) ---------- */
 const GlobalFilter = ({ filter, setFilter }) => (
   <input
-    value={filter || ""}
+    value={filter || ''}
     onChange={e => setFilter(e.target.value || undefined)}
-    placeholder="Search units..."
+    placeholder="Search units…"
     className="border border-gray-300 p-2 rounded w-1/2"
   />
 );
 
-const UnitsList = () => {
-  const [units, setUnits] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    async function load() {
-      try {
-        const { data } = await authFetch('units/');
-      } catch {
-        setError('Error fetching units');
-      } finally {
-        setLoading(false);
-      }
-    }
-    load();
-  }, []);
-
-  // Define table columns
+export default function UnitList() {
+  /* ---------- column definitions ---------- */
   const columns = useMemo(
     () => [
-      { Header: "Unit Name", accessor: "name" },
+      { Header: 'Unit', accessor: 'name' },
+      { Header: 'Building', accessor: 'building_name' },
+      { Header: 'Floor', accessor: 'floor' },
+      { Header: 'Marketing', accessor: 'marketing_status' },
+      { Header: 'Vacancy', accessor: 'vacancy_status' },
       {
-        Header: "Building",
-        accessor: row => (row.building?.name || row.building || '--'),
-        id: 'building_name'
+        Header: 'Foreclosed',
+        accessor: row => (row.foreclosed ? 'Yes' : 'No'),
+        id: 'foreclosed',
       },
-      { Header: "Floor", accessor: "floor" },
-      { Header: "Marketing Status", accessor: "marketing_status" },
-      { Header: "Vacancy Status", accessor: "vacancy_status" },
-      {
-        Header: "Foreclosed",
-        accessor: row => (row.foreclosed ? "Yes" : "No"),
-        id: "foreclosed"
-      }
     ],
-    []
+    [],
   );
 
-  const data = useMemo(() => units, [units]);
+  /* ---------- state ---------- */
+  const [data, setData] = useState([]);
+  const [total, setTotal] = useState(0);      // grand total from API
+  const [pageCount, setPageCount] = useState(0);
+  const [loading, setLoading] = useState(false);
 
-  // Create table instance
+  const fetchIdRef = useRef(0);               // cancel stale requests
+
+  /* ---------- fetch one page from the API ---------- */
+  const fetchPage = useCallback(async ({ pageIndex, pageSize }) => {
+    const fetchId = ++fetchIdRef.current;
+    setLoading(true);
+    try {
+      const url = `units/?page=${pageIndex + 1}&page_size=${pageSize}`;
+      const { data: payload } = await authFetch({ url, method: 'get' });
+
+      if (fetchId !== fetchIdRef.current) return; // newer request exists
+      setData(payload.results);
+      setTotal(payload.count);
+      setPageCount(Math.ceil(payload.count / pageSize));
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  /* ---------- table instance ---------- */
   const {
     getTableProps,
     getTableBodyProps,
     headerGroups,
     page,
     prepareRow,
-    state,
-    setGlobalFilter,
-    canPreviousPage,
-    canNextPage,
-    pageOptions,
-    pageCount,
+    state: { pageIndex, pageSize, globalFilter },
     gotoPage,
     nextPage,
     previousPage,
-    setPageSize
+    setPageSize,
+    canNextPage,
+    canPreviousPage,
+    pageOptions,
   } = useTable(
     {
       columns,
       data,
-      initialState: { pageIndex: 0, pageSize: 10 }
+      manualPagination: true,  // server-side
+      manualGlobalFilter: true,
+      manualSortBy: true,
+      pageCount,
+      initialState: { pageIndex: 0, pageSize: 10 },
     },
     useGlobalFilter,
     useSortBy,
-    usePagination
+    usePagination,
   );
 
-  const { globalFilter, pageIndex, pageSize } = state;
+  /* reload when pageIndex / pageSize change */
+  useEffect(() => {
+    fetchPage({ pageIndex, pageSize });
+  }, [fetchPage, pageIndex, pageSize]);
 
-  if (loading) return <div className="container mx-auto p-4">Loading...</div>;
-  if (error) return <div className="container mx-auto p-4 text-red-600">{error}</div>;
-
+  /* ---------- render ---------- */
   return (
-    <div>
+    <div className="min-h-screen flex flex-col">
       <TopNav />
-      <div className="container mx-auto p-4">
-        <h1 className="text-2xl font-bold mb-4">Units ({data.length})</h1>
 
-        {/* Search & total */}
+      <main className="container mx-auto p-4 flex-1">
+        <h1 className="text-2xl font-bold mb-4">
+          Units&nbsp;
+          <span className="text-sm text-gray-500">
+            ({total.toLocaleString()} total)
+          </span>
+        </h1>
+
         <div className="mb-4 flex justify-between items-center">
-          <GlobalFilter filter={globalFilter} setFilter={setGlobalFilter} />
-          <div className="text-lg">Total Records: {data.length}</div>
+          <GlobalFilter
+            filter={globalFilter}
+            setFilter={() => {
+              /* hook up server search when ready */
+            }}
+          />
         </div>
 
         <div className="overflow-x-auto">
-          <table {...getTableProps()} className="min-w-full bg-white border rounded">
+          <table
+            {...getTableProps()}
+            className="min-w-full bg-white border rounded"
+          >
             <thead className="bg-gray-200">
-              {headerGroups.map(headerGroup => (
-                <tr {...headerGroup.getHeaderGroupProps()}>
-                  {headerGroup.headers.map(column => (
+              {headerGroups.map(hg => (
+                <tr {...hg.getHeaderGroupProps()}>
+                  {hg.headers.map(col => (
                     <th
-                      {...column.getHeaderProps(column.getSortByToggleProps())}
-                      className="py-2 px-4 border text-left cursor-pointer"
+                      {...col.getHeaderProps(col.getSortByToggleProps())}
+                      className="py-2 px-4 border text-left cursor-pointer whitespace-nowrap"
                     >
-                      {column.render("Header")}
-                      <span>
-                        {column.isSorted ? (column.isSortedDesc ? " 🔽" : " 🔼") : ""}
-                      </span>
+                      {col.render('Header')}
+                      {col.isSorted && (col.isSortedDesc ? ' 🔽' : ' 🔼')}
                     </th>
                   ))}
                 </tr>
               ))}
             </thead>
+
             <tbody {...getTableBodyProps()}>
-              {page.map(row => {
-                prepareRow(row);
-                return (
-                  <tr {...row.getRowProps()} className="border-t">
-                    {row.cells.map(cell => (
-                      <td {...cell.getCellProps()} className="py-2 px-4">
-                        {cell.render("Cell")}
-                      </td>
-                    ))}
-                  </tr>
-                );
-              })}
+              {loading && (
+                <tr>
+                  <td
+                    colSpan={columns.length}
+                    className="p-6 text-center"
+                  >
+                    Loading…
+                  </td>
+                </tr>
+              )}
+
+              {!loading &&
+                page.map(row => {
+                  prepareRow(row);
+                  return (
+                    <tr
+                      {...row.getRowProps()}
+                      className="border-t even:bg-gray-50"
+                    >
+                      {row.cells.map(cell => (
+                        <td
+                          {...cell.getCellProps()}
+                          className="py-2 px-4"
+                        >
+                          {cell.render('Cell')}
+                        </td>
+                      ))}
+                    </tr>
+                  );
+                })}
             </tbody>
           </table>
         </div>
 
-        {/* Pagination controls */}
-        <div className="flex justify-between items-center mt-4">
-          <div>
+        {/* ---------- pagination ---------- */}
+        <div className="flex flex-wrap justify-between items-center gap-3 mt-4">
+          <div className="space-x-1">
             <button
+              type="button"
               onClick={() => gotoPage(0)}
               disabled={!canPreviousPage}
-              className="px-3 py-1 bg-gray-300 rounded mr-2 disabled:opacity-50"
+              className="px-2 py-1 border rounded disabled:opacity-40"
             >
-              {'<<'}
+              ⏮
             </button>
             <button
-              onClick={() => previousPage()}
+              type="button"
+              onClick={previousPage}
               disabled={!canPreviousPage}
-              className="px-3 py-1 bg-gray-300 rounded disabled:opacity-50"
+              className="px-3 py-1 border rounded disabled:opacity-40"
             >
-              Previous
+              Prev
             </button>
-          </div>
-          <span>
-            Page{' '}
-            <strong>
-              {pageIndex + 1} of {pageOptions.length}
-            </strong>
-          </span>
-          <div>
             <button
-              onClick={() => nextPage()}
+              type="button"
+              onClick={nextPage}
               disabled={!canNextPage}
-              className="px-3 py-1 bg-gray-300 rounded mr-2 disabled:opacity-50"
+              className="px-3 py-1 border rounded disabled:opacity-40"
             >
               Next
             </button>
             <button
+              type="button"
               onClick={() => gotoPage(pageCount - 1)}
               disabled={!canNextPage}
-              className="px-3 py-1 bg-gray-300 rounded disabled:opacity-50"
+              className="px-2 py-1 border rounded disabled:opacity-40"
             >
-              {'>>'}
+              ⏭
             </button>
           </div>
+
+          <span>
+            Page&nbsp;
+            <strong>
+              {pageIndex + 1} / {pageOptions.length || 1}
+            </strong>
+          </span>
+
           <select
             value={pageSize}
             onChange={e => setPageSize(Number(e.target.value))}
-            className="border p-2 rounded"
+            className="border p-1 rounded"
           >
-            {[10, 20, 50].map(size => (
-              <option key={size} value={size}>
-                Show {size}
+            {[10, 20, 50, 100].map(sz => (
+              <option key={sz} value={sz}>
+                Show {sz}
               </option>
             ))}
           </select>
         </div>
-      </div>
+      </main>
     </div>
   );
-};
-
-export default UnitsList;
+}

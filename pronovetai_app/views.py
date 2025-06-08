@@ -1,7 +1,10 @@
 from rest_framework import viewsets, generics, permissions
+
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
+from rest_framework.pagination import PageNumberPagination
+
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -102,9 +105,15 @@ class BuildingViewSet(viewsets.ModelViewSet):
     serializer_class = BuildingSerializer
 
 
+class UnitPagination(PageNumberPagination):
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
+
 class UnitViewSet(viewsets.ModelViewSet):
     queryset = Unit.objects.select_related('building')
     serializer_class = UnitSerializer
+    pagination_class = UnitPagination
 
 
 class ODFormViewSet(viewsets.ModelViewSet):

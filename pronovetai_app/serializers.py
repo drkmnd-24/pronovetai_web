@@ -193,10 +193,10 @@ class UnitSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Unit
-        fields = [
+        fields = (
             'id', 'name', 'building_name', 'floor',
-            'marketing_status', 'vacancy_status', 'foreclosed',
-        ]
+            'marketing_status', 'vacancy_status', 'foreclosed'
+        )
 
 
 class ODFormSerializer(serializers.ModelSerializer):
