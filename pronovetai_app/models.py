@@ -242,9 +242,7 @@ class Building(models.Model):
     floor_area_ratio = BlankZeroDecimalField(max_digits=6, decimal_places=2,
                                              db_column='building_far',
                                              null=True, blank=True)
-    gross_floor_area = BlankZeroDecimalField(max_digits=12, decimal_places=2,
-                                             db_column='building_gfa',
-                                             null=True, blank=True)
+    gross_floor_area = models.DecimalField(max_digits=10, decimal_places=2, db_column='unit_gfa')
     gross_leasable_area = BlankZeroDecimalField(max_digits=12, decimal_places=2,
                                                 db_column='building_gla',
                                                 null=True, blank=True)
@@ -295,65 +293,132 @@ class BuildingType(models.Model):
 
 class Unit(models.Model):
     id = models.AutoField(primary_key=True, db_column='unit_id')
-    name = models.CharField(max_length=255)
+
+    # ---------- identification ----------
+    name = models.CharField(max_length=255, db_column='unit_name')
     building = models.ForeignKey(
-        Building,
-        on_delete=models.CASCADE,
-        related_name='units',
-        db_column='building_id'
+        Building, on_delete=models.CASCADE,
+        related_name='units', db_column='building_id'
     )
-    floor = models.IntegerField()
+    floor = BlankZeroIntegerField(
+        db_column='unit_address_level', null=True, blank=True
+    )  # e.g. 5, “LG”, etc.
+
+    # ---------- marketing / occupancy ----------
     MARKETING_STATUS_CHOICES = [
         ('lease', 'For Lease'),
         ('sale', 'For Sale'),
-        ('lease_sale', 'For Lease and For Sale'),
-        ('unknown', "Don't know"),
+        ('lease_sale', 'For Lease & Sale'),
+        ('unknown', 'Don’t know'),
     ]
     marketing_status = models.CharField(
-        max_length=20,
-        choices=MARKETING_STATUS_CHOICES,
-        default='unknown'
+        max_length=20, choices=MARKETING_STATUS_CHOICES, default='unknown',
+        db_column='unit_mktg_status'
     )
-    VACANCY_STATUS_CHOICES = [
-        ('vacant', 'Vacant'),
-        ('occupied', 'Occupied'),
-    ]
-    vacancy_status = models.CharField(
-        max_length=20,
-        choices=VACANCY_STATUS_CHOICES,
-        default='vacant'
-    )
-    foreclosed = models.BooleanField(default=False)
-    contact_information = models.CharField(max_length=255)
-    gross_floor_area = models.DecimalField(max_digits=10, decimal_places=2)
-    net_floor_area = models.DecimalField(max_digits=10, decimal_places=2)
-    floor_to_ceiling_height = models.DecimalField(max_digits=5, decimal_places=2)
-    ceiling_condition = models.CharField(max_length=100)
-    floor_condition = models.CharField(max_length=100)
-    partition_condition = models.CharField(max_length=100)
-    lease_commencement_date = models.DateField(null=True, blank=True)
-    lease_expiry_date = models.DateField(null=True, blank=True)
-    asking_rent = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    allocated_parking_slot = models.PositiveIntegerField(null=True, blank=True)
-    price_per_parking_slot = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    minimum_period = models.CharField(max_length=50, null=True, blank=True)
-    escalation_rate = models.DecimalField(max_digits=4, decimal_places=2, null=True, blank=True)
-    rent_free = models.CharField(max_length=50, null=True, blank=True)
-    dues = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    sale_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    sale_parking = models.CharField(max_length=50, null=True, blank=True)
-    contacts = models.ManyToManyField(Contact, blank=True, related_name='units',
-                                      db_table='pt_unit_contacts')
 
+    VACANCY_STATUS_CHOICES = [('vacant', 'Vacant'), ('occupied', 'Occupied')]
+    vacancy_status = models.CharField(
+        max_length=20, choices=VACANCY_STATUS_CHOICES, default='vacant',
+        db_column='unit_vacancy'
+    )
+
+    foreclosed = models.BooleanField(db_column='unit_foreclosed', default=False)
+
+    # the legacy file stores “contact person / company” in a single varchar
+    contact = models.CharField(
+        max_length=255, db_column='unit_contact', blank=True, null=True
+    )
+
+    # ---------- sizes ----------
+    gross_floor_area = BlankZeroDecimalField(
+        max_digits=12, decimal_places=2, db_column='unit_gfa',
+        null=True, blank=True
+    )
+    net_floor_area = BlankZeroDecimalField(
+        max_digits=12, decimal_places=2, db_column='unit_nfa',
+        null=True, blank=True
+    )
+    floor_to_ceiling_height = BlankZeroDecimalField(
+        max_digits=6, decimal_places=2, db_column='unit_f2ch',
+        null=True, blank=True
+    )
+
+    # ---------- fit-out ----------
+    ceiling_condition = models.CharField(max_length=100, db_column='unit_ceiling_ho')
+    floor_condition = models.CharField(max_length=100, db_column='unit_floor_ho')
+    partition_condition = models.CharField(max_length=100, db_column='unit_partition_ho')
+
+    # ---------- lease specifics ----------
+    lease_commencement_date = models.DateField(
+        null=True, blank=True, db_column='unit_lease_start'
+    )
+    lease_expiry_date = models.DateField(
+        null=True, blank=True, db_column='unit_lease_end'
+    )
+
+    asking_rent = BlankZeroDecimalField(
+        max_digits=12, decimal_places=2, db_column='unit_office_rent',
+        null=True, blank=True
+    )
+    allocated_parking_slot = BlankZeroIntegerField(
+        db_column='unit_alloc_parking_slot', null=True, blank=True
+    )
+    price_per_parking_slot = BlankZeroDecimalField(
+        max_digits=12, decimal_places=2, db_column='unit_parking_rent',
+        null=True, blank=True
+    )
+    minimum_period = models.CharField(
+        max_length=50, db_column='unit_min_period', blank=True, null=True
+    )
+    escalation_rate = BlankZeroDecimalField(
+        max_digits=6, decimal_places=2, db_column='unit_escalation_rate',
+        null=True, blank=True
+    )
+    rent_free = models.CharField(
+        max_length=50, db_column='unit_rent_free', blank=True, null=True
+    )
+
+    dues = BlankZeroDecimalField(
+        max_digits=12, decimal_places=2, db_column='unit_dues',
+        null=True, blank=True
+    )
+
+    # ---------- sale ----------
+    sale_price_office = BlankZeroDecimalField(
+        max_digits=14, decimal_places=2, db_column='unit_sale_price_office',
+        null=True, blank=True
+    )
+    sale_price_parking = BlankZeroDecimalField(
+        max_digits=14, decimal_places=2, db_column='unit_sale_price_parking',
+        null=True, blank=True
+    )
+
+    # ---------- misc ----------
+    notes = models.TextField(db_column='unit_notes', blank=True, null=True)
+
+    contacts = models.ManyToManyField(
+        Contact, blank=True, related_name='units', db_table='pt_unit_contacts'
+    )
+
+    # ---------- meta ----------
     class Meta:
         db_table = 'pt_units'
         managed = False
 
+    # ---------- validation helpers ----------
     def clean(self):
-        if self.net_floor_area > self.gross_floor_area:
-            raise ValidationError(_('Net floor area cannot exceed gross floor area'))
-        if self.lease_commencement_date and self.lease_expiry_date and self.lease_commencement_date > self.lease_expiry_date:
-            raise ValidationError(_('Lease commencement must be before lease expiry'))
+        if (
+                self.net_floor_area and self.gross_floor_area
+                and self.net_floor_area > self.gross_floor_area
+        ):
+            raise ValidationError("Net floor area cannot exceed gross floor area")
+
+        if (
+                self.lease_commencement_date
+                and self.lease_expiry_date
+                and self.lease_commencement_date > self.lease_expiry_date
+        ):
+            raise ValidationError("Lease commencement must be before lease expiry")
 
     def __str__(self):
         return f"{self.name} ({self.building.name})"

@@ -26,12 +26,9 @@ const UnitsList = () => {
   useEffect(() => {
     async function load() {
       try {
-        const res = await authFetch('/units/');
-        if (!res.ok) throw new Error('Fetch failed');
-        const data = await res.json();
-        setUnits(data);
+        const { data } = await authFetch('units/');
       } catch {
-        setError('Error fetching buildings');
+        setError('Error fetching units');
       } finally {
         setLoading(false);
       }
@@ -43,7 +40,11 @@ const UnitsList = () => {
   const columns = useMemo(
     () => [
       { Header: "Unit Name", accessor: "name" },
-      { Header: "Building ID", accessor: "building" },
+      {
+        Header: "Building",
+        accessor: row => (row.building?.name || row.building || '--'),
+        id: 'building_name'
+      },
       { Header: "Floor", accessor: "floor" },
       { Header: "Marketing Status", accessor: "marketing_status" },
       { Header: "Vacancy Status", accessor: "vacancy_status" },

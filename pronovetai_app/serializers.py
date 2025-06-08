@@ -189,14 +189,15 @@ class BuildingSerializer(serializers.ModelSerializer):
 
 
 class UnitSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Unit
-        fields = '__all__'
+    class UnitSerializer(serializers.ModelSerializer):
+        building = serializers.CharField(source='building.name', read_only=True)
 
-    def validate(self, data):
-        # trigger model.clean()
-        Unit(**data).clean()
-        return data
+        class Meta:
+            model = Unit
+            fields = [
+                'id', 'name', 'building', 'floor',
+                'marketing_status', 'vacancy_status', 'foreclosed'
+            ]
 
 
 class ODFormSerializer(serializers.ModelSerializer):

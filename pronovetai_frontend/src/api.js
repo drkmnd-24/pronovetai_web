@@ -2,8 +2,8 @@
 import axios from 'axios';
 
 const API_BASE = process.env.REACT_APP_API_BASE || 'http://127.0.0.1:8000/api';
-const API      = axios.create({
-  baseURL: API_BASE + '/',
+const API= axios.create({
+  baseURL: API_BASE.replace(/\/+$/, '') + '/',
   headers: { 'Content-Type': 'application/json' }
 });
 
@@ -22,10 +22,16 @@ export async function refreshAccessToken() {
 }
 
 export async function authFetch(config) {
-  // merge in the access token header
+  /* ➊   Allow a bare string: authFetch('units/')  */
+  if (typeof config === 'string') {
+    config = { url: config, method: 'get' };
+  }
+  /* ➋   Normalise url so both "units/" and "/units/" work */
+  const cleanUrl = config.url.replace(/^\/+/, '');
   const token = localStorage.getItem('accessToken');
   const cfg   = {
     ...config,
+    url: cleanUrl,
     headers: {
       ...(config.headers || {}),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
