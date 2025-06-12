@@ -1,6 +1,6 @@
-// src/components/ContactsList.js          ← replace entire file
+// src/components/ContactsList.js
 import React, { useEffect, useState, useMemo } from 'react';
-import TopNav   from './TopNav';
+import TopNav       from './TopNav';
 import { authFetch } from '../api';
 import {
   useTable,
@@ -9,6 +9,7 @@ import {
   useGlobalFilter,
 } from 'react-table';
 
+/* ---------------- search input ---------------- */
 const GlobalFilter = ({ filter, setFilter }) => (
   <input
     value={filter || ''}
@@ -20,9 +21,10 @@ const GlobalFilter = ({ filter, setFilter }) => (
 
 export default function ContactsList() {
   const [contacts, setContacts] = useState([]);
-  const [loading,  setLoading] = useState(true);
-  const [error,    setError] = useState('');
+  const [loading,  setLoading]  = useState(true);
+  const [error,    setError]    = useState('');
 
+  /* ---------------- fetch once ---------------- */
   useEffect(() => {
     (async () => {
       try {
@@ -37,17 +39,26 @@ export default function ContactsList() {
     })();
   }, []);
 
+  /* ---------------- table columns ---------------- */
   const columns = useMemo(() => [
-    { Header: 'Name', accessor: 'full_name' },
-    { Header: 'Company', accessor: 'company_name', Cell: ({ value }) => value || '—' },
-    { Header: 'Title', accessor: 'title', Cell: ({ value }) => value || '—' },
-    { Header: 'Position', accessor: 'position', Cell: ({ value }) => value || '—' },
-    { Header: 'Email', accessor: 'email', Cell: ({ value }) => value || '—' },
-    { Header: 'Phone', accessor: 'phone_number', Cell: ({ value }) => value || '—' },
-    { Header: 'Mobile', accessor: 'mobile_number', Cell: ({ value }) => value || '—' },
-    { Header: 'Fax', accessor: 'fax_number', Cell: ({ value }) => value || '—' },
+    { Header: 'Name',      accessor: 'full_name' },
+    { Header: 'Company',   accessor: 'company_name',
+      Cell: ({ value }) => value || '—' },
+    { Header: 'Title',     accessor: 'title',
+      Cell: ({ value }) => value || '—' },
+    { Header: 'Position',  accessor: 'position',
+      Cell: ({ value }) => value || '—' },
+    { Header: 'Email',     accessor: 'email',
+      Cell: ({ value }) => value || '—' },
+    { Header: 'Phone',     accessor: 'phone_number',
+      Cell: ({ value }) => value || '—' },
+    { Header: 'Mobile',    accessor: 'mobile_number',
+      Cell: ({ value }) => value || '—' },
+    { Header: 'Fax',       accessor: 'fax_number',
+      Cell: ({ value }) => value || '—' },
   ], []);
 
+  /* ---------------- react-table ---------------- */
   const {
     getTableProps, getTableBodyProps, headerGroups, page, prepareRow,
     state: { pageIndex, pageSize, globalFilter },
@@ -60,6 +71,7 @@ export default function ContactsList() {
     usePagination,
   );
 
+  /* ---------------- ui ---------------- */
   if (loading) return <div className="p-4">Loading…</div>;
   if (error)   return <div className="p-4 text-red-600">{error}</div>;
 
@@ -69,7 +81,8 @@ export default function ContactsList() {
 
       <div className="container mx-auto p-4 flex-1">
         <h1 className="text-2xl font-bold mb-4">
-          Contacts&nbsp;<span className="text-gray-500 text-sm">({contacts.length})</span>
+          Contacts&nbsp;
+          <span className="text-gray-500 text-sm">({contacts.length})</span>
         </h1>
 
         <div className="mb-4 flex justify-between items-center">
@@ -81,9 +94,10 @@ export default function ContactsList() {
           <table {...getTableProps()} className="min-w-full bg-white border rounded">
             <thead className="bg-gray-200">
               {headerGroups.map(hg => (
-                <tr {...hg.getHeaderGroupProps()}>
+                <tr key={hg.id} {...hg.getHeaderGroupProps()}>
                   {hg.headers.map(col => (
                     <th
+                      key={col.id}
                       {...col.getHeaderProps(col.getSortByToggleProps())}
                       className="py-2 px-4 border text-left cursor-pointer"
                     >
@@ -98,9 +112,13 @@ export default function ContactsList() {
               {page.map(row => {
                 prepareRow(row);
                 return (
-                  <tr {...row.getRowProps()} className="border-t">
+                  <tr key={row.id} {...row.getRowProps()} className="border-t">
                     {row.cells.map(cell => (
-                      <td {...cell.getCellProps()} className="py-2 px-4">
+                      <td
+                        key={cell.column.id}
+                        {...cell.getCellProps()}
+                        className="py-2 px-4"
+                      >
                         {cell.render('Cell')}
                       </td>
                     ))}
@@ -111,13 +129,29 @@ export default function ContactsList() {
           </table>
         </div>
 
-        {/* pagination */}
+        {/* ------------- pager ------------- */}
         <div className="flex justify-between items-center mt-4 gap-4">
           <div className="space-x-2">
-            <button onClick={() => gotoPage(0)} disabled={!canPreviousPage} className="btn-pager">{'<<'}</button>
-            <button onClick={previousPage} disabled={!canPreviousPage} className="btn-pager">Prev</button>
-            <button onClick={nextPage} disabled={!canNextPage}     className="btn-pager">Next</button>
-            <button onClick={() => gotoPage(pageOptions.length - 1)} disabled={!canNextPage} className="btn-pager">{'>>'}</button>
+            <button
+              onClick={() => gotoPage(0)}
+              disabled={!canPreviousPage}
+              className="px-3 py-1 bg-gray-300 rounded disabled:opacity-50"
+            >{'<<'}</button>
+            <button
+              onClick={previousPage}
+              disabled={!canPreviousPage}
+              className="px-3 py-1 bg-gray-300 rounded disabled:opacity-50"
+            >Prev</button>
+            <button
+              onClick={nextPage}
+              disabled={!canNextPage}
+              className="px-3 py-1 bg-gray-300 rounded disabled:opacity-50"
+            >Next</button>
+            <button
+              onClick={() => gotoPage(pageOptions.length - 1)}
+              disabled={!canNextPage}
+              className="px-3 py-1 bg-gray-300 rounded disabled:opacity-50"
+            >{'>>'}</button>
           </div>
 
           <span>
@@ -135,10 +169,6 @@ export default function ContactsList() {
           </select>
         </div>
       </div>
-
-      <style jsx="true">{`
-        .btn-pager { @apply px-3 py-1 bg-gray-300 rounded disabled:opacity-50; }
-      `}</style>
     </div>
   );
 }
