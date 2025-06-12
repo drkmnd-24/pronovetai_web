@@ -134,29 +134,15 @@ class ChangePasswordSerializer(serializers.Serializer):
 
 
 class CompanySerializer(serializers.ModelSerializer):
-    address = AddressSerializer(required=False, allow_null=True)
+    full_address = serializers.CharField(read_only=True)
 
     class Meta:
         model = Company
-        fields = '__all__'
-
-    def create(self, validated_data):
-        address_data = validated_data.pop('address', None)
-        if address_data:
-            addr = Address.objects.create(**address_data)
-            validated_data['address'] = addr
-        return Company.objects.create(**validated_data)
-
-    def update(self, instance, validated_data):
-        address_data = validated_data.pop('address', None)
-        if address_data:
-            if instance.address:
-                for k, v in address_data.items():
-                    setattr(instance.address, k, v)
-                instance.address.save()
-            else:
-                instance.address = Address.objects.create(**address_data)
-        return super().update(instance, validated_data)
+        fields = [
+            'id', 'name', 'industry',
+            'address_bldg', 'address_street', 'address_brgy', 'address_city',
+            'full_address',
+        ]
 
 
 class ContactSerializer(serializers.ModelSerializer):

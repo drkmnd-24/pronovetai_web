@@ -424,40 +424,48 @@ class Unit(models.Model):
         return f"{self.name} ({self.building.name})"
 
 
+# models.py  ────────────────────────────────────────────────────────────────
 class Company(models.Model):
     id = models.AutoField(primary_key=True, db_column='company_id')
-    name = models.CharField(max_length=255)
-    building = models.ForeignKey(
-        Building,
-        on_delete=models.CASCADE,
-        related_name='companies',
-        db_column='building_id'
-    )
-    address = models.ForeignKey(
-        Address,
-        on_delete=models.SET_NULL,
-        blank=True,
-        null=True,
-        related_name='companies',
-        db_column='address_id'
-    )
-    industry = models.CharField(max_length=100)
-    building_affiliations = models.ManyToManyField(
-        Building,
-        related_name='affiliated_companies',
-        blank=True,
-        db_table='pt_company_building_affiliations'
-    )
-    unit_affiliations = models.ManyToManyField(
-        Unit,
-        related_name='affiliated_companies',
-        blank=True,
-        db_table='pt_company_unit_affiliations'
-    )
+    name = models.CharField(max_length=255, db_column='company_name')
 
+    # ────────── address is stored flat in this table ──────────
+    address_bldg = models.CharField(max_length=255, db_column='company_address_bldg',
+                                    blank=True, null=True)
+    address_street = models.CharField(max_length=255, db_column='company_address_street',
+                                      blank=True, null=True)
+    address_brgy = models.CharField(max_length=100, db_column='company_address_brgy',
+                                    blank=True, null=True)
+    address_city = models.CharField(max_length=100, db_column='company_address_city',
+                                    blank=True, null=True)
+
+    # other attributes
+    industry = models.CharField(max_length=100, db_column='company_industry',
+                                blank=True, null=True)
+
+    # OPTIONAL bookkeeping columns (keep only if the table really has them)
+    created_by = models.ForeignKey(
+        'User', on_delete=models.SET_NULL, db_column='created_user_id',
+        related_name='+', blank=True, null=True
+    )
+    created_at = models.DateTimeField(db_column='created_date', editable=False)
+    edited_by = models.ForeignKey(
+        'User', on_delete=models.SET_NULL, db_column='edited_user_id',
+        related_name='+', blank=True, null=True
+    )
+    edited_at = models.DateTimeField(db_column='edited_date')
+
+    # meta
     class Meta:
         db_table = 'pt_companies'
-        managed = False
+        managed = False  # ← do **not** let Django create / alter the table
+
+    # nice combined address string (optional)
+    @property
+    def full_address(self):
+        parts = [self.address_bldg, self.address_street,
+                 self.address_brgy, self.address_city]
+        return ', '.join([p for p in parts if p])
 
     def __str__(self):
         return self.name
