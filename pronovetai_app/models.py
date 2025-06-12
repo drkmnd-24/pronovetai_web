@@ -148,22 +148,43 @@ class Address(models.Model):
         return f'{self.street_address or ""} - {self.city}'
 
 
+# ------------------------------------------------------------
+#  Lookup table (unchanged – we keep it for later use)
+# ------------------------------------------------------------
+class ContactType(models.Model):
+    id = models.AutoField(primary_key=True, db_column='contact_type_id')
+    description = models.CharField(max_length=255, db_column='contact_type_desc')
+
+    class Meta:
+        db_table = 'pt_contact_types'
+        managed = False  # <- legacy table, no migrations
+
+    def __str__(self):
+        return self.description
+
+
+# ------------------------------------------------------------
+#  Main contact table – **no contact_type column here**
+# ------------------------------------------------------------
 class Contact(models.Model):
     id = models.AutoField(primary_key=True, db_column='contact_id')
 
     company = models.ForeignKey(
-        'Company', on_delete=models.SET_NULL,
-        null=True, db_column='company_id', related_name='contacts'
+        'Company',
+        on_delete=models.SET_NULL,
+        null=True,
+        db_column='company_id',
+        related_name='contacts',
     )
 
-    # personal info ---------------------------------------------------------
+    # personal info
     title = models.CharField(max_length=100, db_column='contact_title', blank=True, null=True)
     first_name = models.CharField(max_length=100, db_column='contact_first_name', blank=True, null=True)
     last_name = models.CharField(max_length=100, db_column='contact_last_name', blank=True, null=True)
     files_as = models.CharField(max_length=255, db_column='contact_files_as', blank=True, null=True)
     position = models.CharField(max_length=100, db_column='contact_position', blank=True, null=True)
 
-    # comms -----------------------------------------------------------------
+    # comms
     phone_number = models.CharField(max_length=20, db_column='contact_phone', blank=True, null=True)
     mobile_number = models.CharField(max_length=20, db_column='contact_mobile', blank=True, null=True)
     fax_number = models.CharField(max_length=20, db_column='contact_fax', blank=True, null=True)
@@ -171,28 +192,21 @@ class Contact(models.Model):
 
     notes = models.TextField(db_column='contact_notes', blank=True, null=True)
 
-    # ↓ temporarily keep it as a string taken from the lookup table later
-    contact_type = models.CharField(max_length=50, blank=True, null=True)
+    # ----------------------------------------------------------------
+    # There is **no contact_type column** in pt_contacts, so we remove
+    # any field that would make Django query it.
+    # ----------------------------------------------------------------
 
     class Meta:
         db_table = 'pt_contacts'
-        managed = False
+        managed = False  # legacy / read-only
+
+    @property
+    def full_name(self):
+        return f'{self.first_name or ""} {self.last_name or ""}'.strip() or None
 
     def __str__(self):
-        return (f'{self.first_name or ""} {self.last_name or ""}'.strip()
-                or self.email or str(self.id))
-
-
-class ContactType(models.Model):
-    id = models.AutoField(primary_key=True, db_column='contact_type_id')
-    description = models.CharField(max_length=100, db_column='contact_type_desc')
-
-    class Meta:
-        db_table = 'pt_contact_types'
-        managed = False
-
-    def __str__(self):
-        return self.description
+        return self.full_name or self.email or str(self.id)
 
 
 class Building(models.Model):
