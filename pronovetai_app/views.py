@@ -4,6 +4,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.viewsets import ReadOnlyModelViewSet
 
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -95,8 +96,8 @@ class CompanyViewSet(viewsets.ModelViewSet):
     serializer_class = CompanySerializer
 
 
-class ContactViewSet(viewsets.ModelViewSet):
-    queryset = Contact.objects.all()
+class ContactViewSet(ReadOnlyModelViewSet):
+    queryset = Contact.objects.select_related('company')
     serializer_class = ContactSerializer
 
 

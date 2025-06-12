@@ -149,36 +149,50 @@ class Address(models.Model):
 
 
 class Contact(models.Model):
-    company = models.ForeignKey('Company', on_delete=models.SET_NULL, null=True, blank=True,
-                                related_name='contacts', db_column='company_id')
-    title = models.CharField(max_length=100, null=True, blank=True)
-    first_name = models.CharField(max_length=100, null=True, blank=True)
-    last_name = models.CharField(max_length=100, null=True, blank=True)
-    email = models.EmailField()
-    position = models.CharField(max_length=100, null=True, blank=True)
-    phone_number = models.CharField(max_length=20, null=True, blank=True)
-    mobile_number = models.CharField(max_length=20, null=True, blank=True)
-    fax_number = models.CharField(max_length=20, null=True, blank=True)
-    notes = models.TextField(null=True, blank=True)
-    CONTACT_TYPE_CHOICES = [
-        ('property_manager', 'Property Manager'),
-        ('tenant', 'Tenant'),
-        ('agent', 'Agent'),
-        ('owner', 'Owner'),
-        ('owner_representative', 'Owner Representative'),
-        ('pta', 'PTA'),
-        ('others', 'Others'),
-    ]
-    contact_type = models.CharField(
-        max_length=50, choices=CONTACT_TYPE_CHOICES, blank=True, null=True
+    id = models.AutoField(primary_key=True, db_column='contact_id')
+
+    company = models.ForeignKey(
+        'Company', on_delete=models.SET_NULL,
+        null=True, db_column='company_id', related_name='contacts'
     )
+
+    # personal info ---------------------------------------------------------
+    title = models.CharField(max_length=100, db_column='contact_title', blank=True, null=True)
+    first_name = models.CharField(max_length=100, db_column='contact_first_name', blank=True, null=True)
+    last_name = models.CharField(max_length=100, db_column='contact_last_name', blank=True, null=True)
+    files_as = models.CharField(max_length=255, db_column='contact_files_as', blank=True, null=True)
+    position = models.CharField(max_length=100, db_column='contact_position', blank=True, null=True)
+
+    # comms -----------------------------------------------------------------
+    phone_number = models.CharField(max_length=20, db_column='contact_phone', blank=True, null=True)
+    mobile_number = models.CharField(max_length=20, db_column='contact_mobile', blank=True, null=True)
+    fax_number = models.CharField(max_length=20, db_column='contact_fax', blank=True, null=True)
+    email = models.CharField(max_length=254, db_column='contact_email', blank=True, null=True)
+
+    notes = models.TextField(db_column='contact_notes', blank=True, null=True)
+
+    # ↓ temporarily keep it as a string taken from the lookup table later
+    contact_type = models.CharField(max_length=50, blank=True, null=True)
 
     class Meta:
         db_table = 'pt_contacts'
         managed = False
 
     def __str__(self):
-        return self.email or ''
+        return (f'{self.first_name or ""} {self.last_name or ""}'.strip()
+                or self.email or str(self.id))
+
+
+class ContactType(models.Model):
+    id = models.AutoField(primary_key=True, db_column='contact_type_id')
+    description = models.CharField(max_length=100, db_column='contact_type_desc')
+
+    class Meta:
+        db_table = 'pt_contact_types'
+        managed = False
+
+    def __str__(self):
+        return self.description
 
 
 class Building(models.Model):

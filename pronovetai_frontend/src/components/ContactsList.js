@@ -1,136 +1,94 @@
-// src/components/ContactsList.js
-import React, { useEffect, useState, useMemo } from "react";
-import { authFetch } from "../api";
-import TopNav from "./TopNav";
+// src/components/ContactsList.js          ← replace entire file
+import React, { useEffect, useState, useMemo } from 'react';
+import TopNav   from './TopNav';
+import { authFetch } from '../api';
 import {
   useTable,
-  useSortBy,
   usePagination,
-  useGlobalFilter
-} from "react-table";
+  useSortBy,
+  useGlobalFilter,
+} from 'react-table';
 
-// Global search input component
 const GlobalFilter = ({ filter, setFilter }) => (
   <input
-    value={filter || ""}
+    value={filter || ''}
     onChange={e => setFilter(e.target.value || undefined)}
-    placeholder="Search contacts..."
+    placeholder="Search contacts…"
     className="border border-gray-300 p-2 rounded w-1/2"
   />
 );
 
-const ContactsList = () => {
+export default function ContactsList() {
   const [contacts, setContacts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [loading,  setLoading] = useState(true);
+  const [error,    setError] = useState('');
 
   useEffect(() => {
-    async function load() {
+    (async () => {
       try {
-        const res = await authFetch('/contacts/');
-        if (!res.ok) throw new Error('Fetch failed');
-        const data = await res.json();
+        const { data } = await authFetch({ url: 'contacts/', method: 'get' });
         setContacts(data);
-      } catch {
-        setError('Error fetching buildings');
+      } catch (err) {
+        console.error(err);
+        setError('Error fetching contacts');
       } finally {
         setLoading(false);
       }
-    }
-    load();
+    })();
   }, []);
 
-  // Define table columns
-  const columns = useMemo(
-    () => [
-      {
-        Header: "Name",
-        accessor: row => `${row.first_name} ${row.last_name}`,
-        id: "name"
-      },
-      {
-        Header: "Company",
-        accessor: row => (row.company ? row.company.name : "N/A"),
-        id: "company"
-      },
-      { Header: "Title", accessor: "title" },
-      { Header: "Position", accessor: "position" },
-      { Header: "Email", accessor: "email" },
-      { Header: "Phone", accessor: "phone_number" },
-      { Header: "Mobile", accessor: "mobile_number" },
-      { Header: "Fax", accessor: "fax_number" },
-      {
-        Header: "Contact Type",
-        accessor: "contact_type"
-      }
-    ],
-    []
-  );
+  const columns = useMemo(() => [
+    { Header: 'Name', accessor: 'full_name' },
+    { Header: 'Company', accessor: 'company_name', Cell: ({ value }) => value || '—' },
+    { Header: 'Title', accessor: 'title', Cell: ({ value }) => value || '—' },
+    { Header: 'Position', accessor: 'position', Cell: ({ value }) => value || '—' },
+    { Header: 'Email', accessor: 'email', Cell: ({ value }) => value || '—' },
+    { Header: 'Phone', accessor: 'phone_number', Cell: ({ value }) => value || '—' },
+    { Header: 'Mobile', accessor: 'mobile_number', Cell: ({ value }) => value || '—' },
+    { Header: 'Fax', accessor: 'fax_number', Cell: ({ value }) => value || '—' },
+  ], []);
 
-  const data = useMemo(() => contacts, [contacts]);
-
-  // Create table instance
   const {
-    getTableProps,
-    getTableBodyProps,
-    headerGroups,
-    page,
-    prepareRow,
-    state,
-    setGlobalFilter,
-    canPreviousPage,
-    canNextPage,
-    pageOptions,
-    pageCount,
-    gotoPage,
-    nextPage,
-    previousPage,
-    setPageSize
+    getTableProps, getTableBodyProps, headerGroups, page, prepareRow,
+    state: { pageIndex, pageSize, globalFilter },
+    setGlobalFilter, canPreviousPage, canNextPage,
+    pageOptions, gotoPage, nextPage, previousPage, setPageSize,
   } = useTable(
-    { columns, data, initialState: { pageIndex: 0, pageSize: 10 } },
+    { columns, data: contacts, initialState: { pageIndex: 0, pageSize: 10 } },
     useGlobalFilter,
     useSortBy,
-    usePagination
+    usePagination,
   );
 
-  const { globalFilter, pageIndex, pageSize } = state;
-
-  if (loading) return <div className="container mx-auto p-4">Loading...</div>;
-  if (error) return <div className="container mx-auto p-4 text-red-600">{error}</div>;
+  if (loading) return <div className="p-4">Loading…</div>;
+  if (error)   return <div className="p-4 text-red-600">{error}</div>;
 
   return (
-    <div>
+    <div className="min-h-screen flex flex-col">
       <TopNav />
-      <div className="container mx-auto p-4">
-        <h1 className="text-2xl font-bold mb-4">Contacts ({data.length})</h1>
 
-        {/* Search & Total Count */}
+      <div className="container mx-auto p-4 flex-1">
+        <h1 className="text-2xl font-bold mb-4">
+          Contacts&nbsp;<span className="text-gray-500 text-sm">({contacts.length})</span>
+        </h1>
+
         <div className="mb-4 flex justify-between items-center">
           <GlobalFilter filter={globalFilter} setFilter={setGlobalFilter} />
-          <div className="text-lg">Total Records: {data.length}</div>
+          <div className="text-lg">Total: {contacts.length}</div>
         </div>
 
         <div className="overflow-x-auto">
-          <table
-            {...getTableProps()}
-            className="min-w-full bg-white border rounded"
-          >
+          <table {...getTableProps()} className="min-w-full bg-white border rounded">
             <thead className="bg-gray-200">
-              {headerGroups.map(headerGroup => (
-                <tr {...headerGroup.getHeaderGroupProps()}>
-                  {headerGroup.headers.map(column => (
+              {headerGroups.map(hg => (
+                <tr {...hg.getHeaderGroupProps()}>
+                  {hg.headers.map(col => (
                     <th
-                      {...column.getHeaderProps(column.getSortByToggleProps())}
+                      {...col.getHeaderProps(col.getSortByToggleProps())}
                       className="py-2 px-4 border text-left cursor-pointer"
                     >
-                      {column.render("Header")}
-                      <span>
-                        {column.isSorted
-                          ? column.isSortedDesc
-                            ? " 🔽"
-                            : " 🔼"
-                          : ""}
-                      </span>
+                      {col.render('Header')}
+                      {col.isSorted ? (col.isSortedDesc ? ' 🔽' : ' 🔼') : ''}
                     </th>
                   ))}
                 </tr>
@@ -142,11 +100,8 @@ const ContactsList = () => {
                 return (
                   <tr {...row.getRowProps()} className="border-t">
                     {row.cells.map(cell => (
-                      <td
-                        {...cell.getCellProps()}
-                        className="py-2 px-4"
-                      >
-                        {cell.render("Cell")}
+                      <td {...cell.getCellProps()} className="py-2 px-4">
+                        {cell.render('Cell')}
                       </td>
                     ))}
                   </tr>
@@ -156,61 +111,34 @@ const ContactsList = () => {
           </table>
         </div>
 
-        {/* Pagination Controls */}
-        <div className="flex justify-between items-center mt-4">
-          <div>
-            <button
-              onClick={() => gotoPage(0)}
-              disabled={!canPreviousPage}
-              className="px-3 py-1 bg-gray-300 rounded mr-2 disabled:opacity-50"
-            >
-              {'<<'}
-            </button>
-            <button
-              onClick={() => previousPage()}
-              disabled={!canPreviousPage}
-              className="px-3 py-1 bg-gray-300 rounded disabled:opacity-50"
-            >
-              Previous
-            </button>
+        {/* pagination */}
+        <div className="flex justify-between items-center mt-4 gap-4">
+          <div className="space-x-2">
+            <button onClick={() => gotoPage(0)} disabled={!canPreviousPage} className="btn-pager">{'<<'}</button>
+            <button onClick={previousPage} disabled={!canPreviousPage} className="btn-pager">Prev</button>
+            <button onClick={nextPage} disabled={!canNextPage}     className="btn-pager">Next</button>
+            <button onClick={() => gotoPage(pageOptions.length - 1)} disabled={!canNextPage} className="btn-pager">{'>>'}</button>
           </div>
+
           <span>
-            Page{' '}
-            <strong>
-              {pageIndex + 1} of {pageOptions.length}
-            </strong>
+            Page&nbsp;<strong>{pageIndex + 1} / {pageOptions.length}</strong>
           </span>
-          <div>
-            <button
-              onClick={() => nextPage()}
-              disabled={!canNextPage}
-              className="px-3 py-1 bg-gray-300 rounded mr-2 disabled:opacity-50"
-            >
-              Next
-            </button>
-            <button
-              onClick={() => gotoPage(pageCount - 1)}
-              disabled={!canNextPage}
-              className="px-3 py-1 bg-gray-300 rounded disabled:opacity-50"
-            >
-              {'>>'}
-            </button>
-          </div>
+
           <select
             value={pageSize}
             onChange={e => setPageSize(Number(e.target.value))}
-            className="border p-2 rounded"
+            className="border p-1 rounded"
           >
-            {[10, 20, 50].map(size => (
-              <option key={size} value={size}>
-                Show {size}
-              </option>
+            {[10, 20, 50, 100].map(sz => (
+              <option key={sz} value={sz}>Show {sz}</option>
             ))}
           </select>
         </div>
       </div>
+
+      <style jsx="true">{`
+        .btn-pager { @apply px-3 py-1 bg-gray-300 rounded disabled:opacity-50; }
+      `}</style>
     </div>
   );
-};
-
-export default ContactsList;
+}

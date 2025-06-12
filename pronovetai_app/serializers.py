@@ -146,9 +146,20 @@ class CompanySerializer(serializers.ModelSerializer):
 
 
 class ContactSerializer(serializers.ModelSerializer):
+    full_name = serializers.SerializerMethodField()
+    company_name = serializers.CharField(source='company.name', read_only=True)
+
     class Meta:
         model = Contact
-        fields = '__all__'
+        fields = [
+            'id', 'full_name', 'title', 'position',
+            'email', 'phone_number', 'mobile_number', 'fax_number',
+            'company_name', 'contact_type',  # now a plain string
+        ]
+
+    def get_full_name(self, obj):
+        name = f'{obj.first_name or ""} {obj.last_name or ""}'.strip()
+        return name or None
 
 
 class BuildingSerializer(serializers.ModelSerializer):
