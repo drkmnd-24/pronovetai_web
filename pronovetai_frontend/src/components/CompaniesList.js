@@ -1,17 +1,15 @@
 // src/components/CompaniesList.js
 import React, { useEffect, useState, useMemo } from 'react';
-import TopNav   from './TopNav';
+import TopNav       from './TopNav';
 import { authFetch } from '../api';
 import {
   useTable,
-  useSortBy,
   usePagination,
+  useSortBy,
   useGlobalFilter,
 } from 'react-table';
 
-/* ------------------------------------------------------------------ */
-/*  Global search box (client-side filter for now)                     */
-/* ------------------------------------------------------------------ */
+/* ------------ quick global search ------------- */
 const GlobalFilter = ({ filter, setFilter }) => (
   <input
     value={filter || ''}
@@ -21,21 +19,17 @@ const GlobalFilter = ({ filter, setFilter }) => (
   />
 );
 
-/* ------------------------------------------------------------------ */
-/*  Main component                                                     */
-/* ------------------------------------------------------------------ */
 export default function CompaniesList() {
-  /* -------------- data & ui state -------------- */
+  /* -------------- data & state ---------------- */
   const [companies, setCompanies] = useState([]);
   const [loading,   setLoading]   = useState(true);
   const [error,     setError]     = useState('');
 
-  /* -------------- fetch once on mount ---------- */
   useEffect(() => {
     (async () => {
       try {
         const { data } = await authFetch({ url: 'companies/', method: 'get' });
-        setCompanies(data);                     // ← whole list, no server pagination for now
+        setCompanies(data);           // (client-side paging for now)
       } catch (err) {
         console.error(err);
         setError('Error fetching companies');
@@ -47,43 +41,27 @@ export default function CompaniesList() {
 
   /* -------------- table columns ---------------- */
   const columns = useMemo(() => [
-    { Header: 'Name',      accessor: 'name' },
-    { Header: 'Industry',  accessor: 'industry', Cell: ({ value }) => value || '—' },
-    {
-      Header : 'Address',
-      accessor: 'full_address',
-      Cell    : ({ value }) => value || '—',
-    },
+    { Header: 'Name',     accessor: 'name' },
+    { Header: 'Industry', accessor: 'industry',
+      Cell: ({ value }) => value || '—' },
+    { Header: 'Address',  accessor: 'full_address',
+      Cell: ({ value }) => value || '—' },
   ], []);
 
-  /* -------------- react-table setup ------------ */
+  /* -------------- react-table ------------------ */
   const {
-    getTableProps,
-    getTableBodyProps,
-    headerGroups,
-    page,
-    prepareRow,
+    getTableProps, getTableBodyProps, headerGroups, page, prepareRow,
     state: { pageIndex, pageSize, globalFilter },
-    setGlobalFilter,
-    canPreviousPage,
-    canNextPage,
-    pageOptions,
-    gotoPage,
-    nextPage,
-    previousPage,
-    setPageSize,
+    setGlobalFilter, canPreviousPage, canNextPage,
+    pageOptions, gotoPage, nextPage, previousPage, setPageSize,
   } = useTable(
-    {
-      columns,
-      data : companies,
-      initialState: { pageIndex: 0, pageSize: 10 },
-    },
+    { columns, data: companies, initialState: { pageIndex: 0, pageSize: 10 } },
     useGlobalFilter,
     useSortBy,
     usePagination,
   );
 
-  /* -------------- render ----------------------- */
+  /* ---------------- render --------------------- */
   if (loading) return <div className="p-4">Loading…</div>;
   if (error)   return <div className="p-4 text-red-600">{error}</div>;
 
@@ -97,7 +75,7 @@ export default function CompaniesList() {
           <span className="text-gray-500 text-sm">({companies.length})</span>
         </h1>
 
-        {/* search & count */}
+        {/* search + count */}
         <div className="mb-4 flex justify-between items-center">
           <GlobalFilter filter={globalFilter} setFilter={setGlobalFilter} />
           <div className="text-lg">Total: {companies.length}</div>
@@ -108,9 +86,10 @@ export default function CompaniesList() {
           <table {...getTableProps()} className="min-w-full bg-white border rounded">
             <thead className="bg-gray-200">
               {headerGroups.map(hg => (
-                <tr {...hg.getHeaderGroupProps()}>
+                <tr key={hg.id} {...hg.getHeaderGroupProps()}>
                   {hg.headers.map(col => (
                     <th
+                      key={col.id}
                       {...col.getHeaderProps(col.getSortByToggleProps())}
                       className="py-2 px-4 border text-left cursor-pointer"
                     >
@@ -126,9 +105,9 @@ export default function CompaniesList() {
               {page.map(row => {
                 prepareRow(row);
                 return (
-                  <tr {...row.getRowProps()} className="border-t">
+                  <tr key={row.id ?? row.index} {...row.getRowProps()} className="border-t">
                     {row.cells.map(cell => (
-                      <td {...cell.getCellProps()} className="py-2 px-4">
+                      <td key={cell.column.id} {...cell.getCellProps()} className="py-2 px-4">
                         {cell.render('Cell')}
                       </td>
                     ))}
@@ -139,17 +118,33 @@ export default function CompaniesList() {
           </table>
         </div>
 
-        {/* pagination */}
+        {/* pager */}
         <div className="flex justify-between items-center mt-4 gap-4">
           <div className="space-x-2">
-            <button onClick={() => gotoPage(0)}        disabled={!canPreviousPage} className="btn-pager">{'<<'}</button>
-            <button onClick={previousPage}             disabled={!canPreviousPage} className="btn-pager">Prev</button>
-            <button onClick={nextPage}                 disabled={!canNextPage}     className="btn-pager">Next</button>
-            <button onClick={() => gotoPage(pageOptions.length - 1)} disabled={!canNextPage} className="btn-pager">{'>>'}</button>
+            <button
+              onClick={() => gotoPage(0)}
+              disabled={!canPreviousPage}
+              className="px-3 py-1 bg-gray-300 rounded disabled:opacity-50"
+            >{'<<'}</button>
+            <button
+              onClick={previousPage}
+              disabled={!canPreviousPage}
+              className="px-3 py-1 bg-gray-300 rounded disabled:opacity-50"
+            >Prev</button>
+            <button
+              onClick={nextPage}
+              disabled={!canNextPage}
+              className="px-3 py-1 bg-gray-300 rounded disabled:opacity-50"
+            >Next</button>
+            <button
+              onClick={() => gotoPage(pageOptions.length - 1)}
+              disabled={!canNextPage}
+              className="px-3 py-1 bg-gray-300 rounded disabled:opacity-50"
+            >{'>>'}</button>
           </div>
 
           <span>
-            Page <strong>{pageIndex + 1} of {pageOptions.length}</strong>
+            Page&nbsp;<strong>{pageIndex + 1}</strong>&nbsp;/&nbsp;{pageOptions.length}
           </span>
 
           <select
@@ -163,13 +158,6 @@ export default function CompaniesList() {
           </select>
         </div>
       </div>
-
-      {/* quick tailwind helper (btn style) */}
-      <style jsx="true">{`
-        .btn-pager {
-          @apply px-3 py-1 bg-gray-300 rounded disabled:opacity-50;
-        }
-      `}</style>
     </div>
   );
 }
