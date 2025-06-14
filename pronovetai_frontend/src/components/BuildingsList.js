@@ -1,13 +1,10 @@
 // src/components/BuildingsList.js
-import React, { useEffect, useMemo, useState } from 'react';
-import {
-  useTable,
-  useSortBy,
-  usePagination,
-  useGlobalFilter
-} from 'react-table';
-import TopNav     from './TopNav';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
+import { useTable, useSortBy, usePagination, useGlobalFilter } from 'react-table';
+import { useNavigate } from 'react-router-dom';
+import TopNav from './TopNav';
 import { authFetch } from '../api';
+import { Edit2, Trash2 } from 'lucide-react';
 
 /* ––––– global search input ––––– */
 function GlobalFilter({ filter, setFilter }) {
@@ -24,8 +21,9 @@ function GlobalFilter({ filter, setFilter }) {
 /* ––––– main component ––––– */
 export default function BuildingsList() {
   const [buildings, setBuildings] = useState([]);
-  const [loading,   setLoading]   = useState(true);
-  const [error,     setError]     = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const navigate = useNavigate();
 
   /* fetch once on mount */
   useEffect(() => {
@@ -41,11 +39,27 @@ export default function BuildingsList() {
     })();
   }, []);
 
+  /* handle edit navigation */
+  const handleEdit = useCallback(building => {
+    navigate(`/buildings/${building.id}/edit`);
+  }, [navigate]);
+
+  /* handle delete action */
+  const handleDelete = useCallback(async building => {
+    if (!window.confirm('Are you sure you want to delete this building?')) return;
+    try {
+      await authFetch({ method: 'delete', url: `buildings/${building.id}/` });
+      setBuildings(prev => prev.filter(b => b.id !== building.id));
+    } catch {
+      alert('Failed to delete building');
+    }
+  }, []);
+
   /* helper for prettifying contacts */
   const contactName = b => {
     if (!b.contacts?.length) return 'N/A';
     const owner = b.contacts.find(c => c.contact_type === 'owner');
-    const c     = owner || b.contacts[0];
+    const c = owner || b.contacts[0];
     return `${c.first_name || ''} ${c.last_name || ''}`.trim() || c.email || 'N/A';
   };
 
@@ -60,12 +74,34 @@ export default function BuildingsList() {
           : 'No address',
       id: 'address'
     },
-    { Header: 'Type',  accessor: 'building_type' },
+    { Header: 'Type', accessor: 'building_type' },
     { Header: 'Contact', accessor: contactName, id: 'contact' },
-    { Header: 'Grade',   accessor: 'grade' },
-    { Header: 'PEZA',    accessor: r => (r.is_peza_certified ? 'Yes' : 'No'), id: 'peza' },
-    { Header: 'Strata',  accessor: r => (r.is_strata         ? 'Yes' : 'No'), id: 'strata' }
-  ], []);
+    { Header: 'Grade', accessor: 'grade' },
+    { Header: 'PEZA', accessor: r => (r.is_peza_certified ? 'Yes' : 'No'), id: 'peza' },
+    { Header: 'Strata', accessor: r => (r.is_strata ? 'Yes' : 'No'), id: 'strata' },
+    {
+      Header: 'Actions',
+      id: 'actions',
+      Cell: ({ row }) => (
+        <div className="flex space-x-2">
+          <button
+            onClick={() => handleEdit(row.original)}
+            aria-label="Edit building"
+            className="p-1 hover:bg-gray-100 rounded"
+          >
+            <Edit2 className="w-5 h-5 text-blue-600 hover:text-blue-800" />
+          </button>
+          <button
+            onClick={() => handleDelete(row.original)}
+            aria-label="Delete building"
+            className="p-1 hover:bg-gray-100 rounded"
+          >
+            <Trash2 className="w-5 h-5 text-red-600 hover:text-red-800" />
+          </button>
+        </div>
+      )
+    }
+  ], [handleEdit, handleDelete]);
 
   const data = useMemo(() => buildings, [buildings]);
 
@@ -98,7 +134,7 @@ export default function BuildingsList() {
 
   /* ––– render ––– */
   if (loading) return <Centered>Loading…</Centered>;
-  if (error)   return <Centered className="text-red-600">{error}</Centered>;
+  if (error) return <Centered className="text-red-600">{error}</Centered>;
 
   return (
     <div>
@@ -151,7 +187,7 @@ export default function BuildingsList() {
         <div className="flex justify-between items-center mt-4">
           <div>
             <NavButton onClick={() => gotoPage(0)} disabled={!canPreviousPage}>{'<<'}</NavButton>
-            <NavButton onClick={previousPage}     disabled={!canPreviousPage}>Previous</NavButton>
+            <NavButton onClick={previousPage} disabled={!canPreviousPage}>Previous</NavButton>
           </div>
 
           <span>
@@ -159,7 +195,7 @@ export default function BuildingsList() {
           </span>
 
           <div>
-            <NavButton onClick={nextPage}          disabled={!canNextPage}>Next</NavButton>
+            <NavButton onClick={nextPage} disabled={!canNextPage}>Next</NavButton>
             <NavButton onClick={() => gotoPage(pageCount - 1)} disabled={!canNextPage}>{'>>'}</NavButton>
           </div>
 
