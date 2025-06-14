@@ -34,13 +34,19 @@ function EditModal({ building, onClose, onSave }) {
   useEffect(() => {
     if (building) {
       setForm({
-        building_name: building.name || '',
-        building_grade: building.grade || '',
-        building_peza: building.is_peza_certified || false,
-        building_strata: building.is_strata || false,
-        building_address_street: building.address?.street_address || '',
-        building_address_brgy: building.address?.barangay || '',
-        building_address_city: building.address?.city || '',
+        building_name: building.name ?? '',
+        building_grade: building.grade ?? '',
+        building_peza: building.is_peza_certified ?? false,
+        building_strata: building.is_strata ?? false,
+        building_address_street: building.address?.street_address
+                                 ?? building.building_address_street
+                                 ?? '',
+        building_address_brgy: building.address?.barangay
+                               ?? building.building_address_brgy
+                               ?? '',
+        building_address_city: building.address?.city
+                               ?? building.building_address_city
+                               ?? '',
       });
     }
   }, [building]);
@@ -63,6 +69,9 @@ function EditModal({ building, onClose, onSave }) {
         barangay: form.building_address_brgy,
         city: form.building_address_city,
       },
+      building_address_street: form.building_address_street,
+      building_address_brgy: form.building_address_brgy,
+      building_address_city: form.building_address_city,
     };
 
     try {
@@ -228,27 +237,36 @@ export default function BuildingsList() {
       { Header: 'Building Grade', accessor: 'grade' },
       {
         Header: 'PEZA',
-        accessor: (r) => (r.is_peza_certified ? 'Yes' : 'No'),
+        accessor: r => (r.is_peza_certified ? 'Yes' : 'No'),
         id: 'peza',
       },
       {
         Header: 'Strata',
-        accessor: (r) => (r.is_strata ? 'Yes' : 'No'),
+        accessor: r => (r.is_strata ? 'Yes' : 'No'),
         id: 'strata',
       },
       {
         Header: 'Street',
-        accessor: (r) => r.address?.street_address || '—',
+        accessor: r =>
+            r.address?.street_address ??
+            r.building_address_street ??
+            '--',
         id: 'street',
       },
       {
         Header: 'Barangay',
-        accessor: (r) => r.address?.barangay || '—',
+        accessor: r =>
+            r.address?.barangay ??
+            r.building_address_brgy ??
+            '--',
         id: 'brgy',
       },
       {
         Header: 'City',
-        accessor: (r) => r.address?.city || '—',
+        accessor: r =>
+            r.address?.city ??
+            r.building_address_city ??
+            '--',
         id: 'city',
       },
       {
