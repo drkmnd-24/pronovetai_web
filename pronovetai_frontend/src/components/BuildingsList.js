@@ -247,27 +247,15 @@ export default function BuildingsList() {
       },
       {
         Header: 'Street',
-        accessor: r =>
-            r.address?.street_address ??
-            r.building_address_street ??
-            '--',
-        id: 'street',
+        accessor: 'address_street',   // or r => r.address_street || '—'
       },
       {
         Header: 'Barangay',
-        accessor: r =>
-            r.address?.barangay ??
-            r.building_address_brgy ??
-            '--',
-        id: 'brgy',
+        accessor: 'address_brgy',
       },
       {
         Header: 'City',
-        accessor: r =>
-            r.address?.city ??
-            r.building_address_city ??
-            '--',
-        id: 'city',
+        accessor: 'address_city',
       },
       {
         Header: 'Actions',

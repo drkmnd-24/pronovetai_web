@@ -103,7 +103,8 @@ class ManagerRegistrationSerializer(serializers.ModelSerializer):
 class AddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = Address
-        fields = '__all__'
+        fields = ['street_address', 'barangay',
+                  'city', 'zip_code', ]
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -164,20 +165,31 @@ class ContactSerializer(serializers.ModelSerializer):
 
 
 class BuildingSerializer(serializers.ModelSerializer):
-    address = serializers.CharField(read_only=True)  # uses the @property above
-
     class Meta:
-        model = Building
+        model  = Building
         fields = [
             'id', 'name', 'grade', 'building_type',
             'is_peza_certified', 'is_strata',
-            'year_built', 'address'
+            'year_built',
+            # flat address pieces straight from pt_buildings
+            'address_street',
+            'address_brgy',
+            'address_city',
+            'address_zip',
         ]
+
+    def create(self, validated_data):
+        addr_data = validated_data.pop('address', None)
+        building = super().create(validated_data)
+        if addr_data:
+            building.address = Address.objects.create(**addr_data)
+            building.save()
+        return building
 
     def update(self, instance, validated_data):
         addr_data = validated_data.pop('address', None)
         if addr_data:
-            if instance.address:
+            if instance.address_id:
                 for k, v in addr_data.items():
                     setattr(instance.address, k, v)
                 instance.address.save()
