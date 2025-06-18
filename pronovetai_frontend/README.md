@@ -1,70 +1,154 @@
-# Getting Started with Create React App
+# TailAdmin - Free Tailwind Admin Dashboard Template
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+TailAdmin is a high-quality, open-source, and **free Tailwind CSS admin template** that is perfect for creating data-rich backends,
+powerful web applications and dashboard-admin projects.
 
-## Available Scripts
+![TailAdmin Dashboard Preview](./banner.png)
 
-In the project directory, you can run:
+## Overview
 
-### `npm start`
+TailAdmin provides essential UI components and layouts for building feature-rich, data-driven admin dashboards and control panels. It's built using:
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+- HTML
+- Alpine.js
+- Tailwind CSS
+- and Webpack (for bundling)
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+### Quick Links
 
-### `npm test`
+- [✨ Visit Website](https://tailadmin.com)
+- [📄 Documentation](https://tailadmin.com/docs)
+- [⬇️ Download](https://tailadmin.com/download)
+- [🖌️ Figma Design File (Community Edition)](https://www.figma.com/community/file/1463141366275764364)
+- [⚡ Get PRO Version](https://tailadmin.com/pricing)
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### Demos
 
-### `npm run build`
+- [Free Version](https://free-demo.tailadmin.com/)
+- [Pro Version](https://demo.tailadmin.com)
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### Other Versions
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+- [Next.js Version](https://github.com/TailAdmin/free-nextjs-admin-dashboard)
+- [React.js Version](https://github.com/TailAdmin/free-react-tailwind-admin-dashboard)
+- [Vue.js Version](https://github.com/TailAdmin/vue-tailwind-admin-dashboard)
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## Installation
 
-### `npm run eject`
+### Prerequisites
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+To get started with TailAdmin, ensure you have the following prerequisites installed and set up:
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+- Node.js 18.x or later
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+### Cloning the Repository
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+Clone the repository using the following command:
 
-## Learn More
+```bash
+git clone https://github.com/TailAdmin/tailadmin-free-tailwind-dashboard-template.git
+```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+> Windows Users: place the repository near the root of your drive if you face issues while cloning.
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+1. Install dependencies:
 
-### Code Splitting
+   ```bash
+   npm install
+   # or
+   yarn install
+   ```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+2. Start the development server:
+   ```bash
+   npm run start
+   # or
+   yarn start
+   ```
 
-### Analyzing the Bundle Size
+## Components
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+TailAdmin is a pre-designed starting point for building a web-based dashboard using HTML, Alpine.js and Tailwind CSS. The template includes:
 
-### Making a Progressive Web App
+- Sophisticated and accessible sidebar
+- Data visualization components
+- Prebuilt profile management and 404 page
+- Tables and Charts(Line and Bar)
+- Authentication forms and input elements
+- Alerts, Dropdowns, Modals, Buttons and more
+- Can't forget Dark Mode 🕶️
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+## Feature Comparison
 
-### Advanced Configuration
+### Free Version
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+- 1 Unique Dashboard
+- 30+ dashboard components
+- 50+ UI elements
+- Basic Figma design files
+- Community support
 
-### Deployment
+### Pro Version
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+- 5 Unique Dashboards: Analytics, Ecommerce, Marketing, CRM, Stocks (more coming soon)
+- 400+ dashboard components and UI elements
+- Complete Figma design file
+- Email support
 
-### `npm run build` fails to minify
+To learn more about pro version features and pricing, visit our [pricing page](https://tailadmin.com/pricing).
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+## Update Logs
+
+### Version 2.0.1 - [February 27, 2025]
+
+#### Update Overview
+
+- Upgraded to Tailwind CSS v4 for better performance and efficiency.
+- Updated class usage to match the latest syntax and features.
+- Replaced deprecated class and optimized styles.
+
+#### Next Steps
+
+- Run npm install or yarn install to update dependencies.
+- Check for any style changes or compatibility issues.
+- Refer to the Tailwind CSS v4 [Migration Guide](https://tailwindcss.com/docs/upgrade-guide) on this release. if needed.
+- This update keeps the project up to date with the latest Tailwind improvements. 🚀
+
+### Version 2.0.0 - [February 2025]
+
+Major update with comprehensive redesign and new features.
+
+#### Major Improvements
+
+- Complete UI redesign of all pages and components
+- Enhanced user interface with new elements
+- Improved responsiveness and accessibility
+- New features: collapsible sidebar, chat, and calendar
+- Updated data visualization components
+
+#### New Features
+
+- Redesigned dashboards (Ecommerce, Analytics, Marketing, CRM)
+- Enhanced navigation with improved header and breadcrumbs
+- Advanced table components with sorting and filtering
+- New UI components (Avatar, Alert, Ribbon)
+- Full-featured calendar with drag-and-drop
+
+#### Breaking Changes
+
+- Updated sidebar component API
+- New charting library implementation
+- Revised authentication system
+- **Deprecations:** SimpleTable component and legacy icon set
+
+#### Previous Versions
+
+For detailed changelogs of previous versions (1.0.0 - 1.3.0), visit our [documentation](https://tailadmin.com/docs/update-logs/).
+
+## License
+
+The community edition of TailAdmin is released under the MIT License.
+
+## Support
+
+If you find this project helpful, please consider giving it a star on GitHub. Your support helps us continue developing and maintaining this template.
