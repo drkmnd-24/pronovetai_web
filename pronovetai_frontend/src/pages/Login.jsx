@@ -47,7 +47,7 @@ export default function Login() {
             <div className="auth-logo mb-4 text-center text-lg-start">
               <Link to="/">
                 <img
-                  src="../vendor/mazer/img/logo.svg"
+                  src="../../public/mazer/img/logo/logo.svg"
                   alt="Logo"
                   style={{ height: 40 }}
                 />

@@ -2,9 +2,9 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 // Mazer theme bundle
-import './vendor/mazer/css/app.css';
-import './vendor/mazer/css/app-dark.css';
-import './vendor/mazer/css/auth.css';
+import '../public/mazer/css/app.css';
+import '../public/mazer/css/app-dark.css';
+import '../public/mazer/css/auth.css';
 
 // --- JS you actually write ----------------------------------------
 import React from 'react';

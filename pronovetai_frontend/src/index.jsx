@@ -1,6 +1,6 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
-import './assets/mazer/css/mazer.min.css';
-import './assets/mazers.js'
+import '../public/mazer/css/mazer.min.css';
+import '../public/mazer/css/mazers.js'
 import React  from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
