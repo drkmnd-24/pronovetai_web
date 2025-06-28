@@ -56,7 +56,7 @@ export default function Login() {
 
             <h1 className="auth-title mb-1">Log in.</h1>
             <p className="auth-subtitle mb-4">
-              Log in with the data you entered during registration.
+              Welcome to Pronove TAI
             </p>
 
             {/* errors */}
