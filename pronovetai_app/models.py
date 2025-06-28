@@ -452,24 +452,18 @@ class Unit(models.Model):
         return f"{self.name} ({self.building.name})"
 
 
-# models.py  ────────────────────────────────────────────────────────────────
 class Company(models.Model):
     id = models.AutoField(primary_key=True, db_column='company_id')
     name = models.CharField(max_length=255, db_column='company_name')
 
     # ────────── address is stored flat in this table ──────────
-    address_bldg = models.CharField(max_length=255, db_column='company_address_bldg',
-                                    blank=True, null=True)
-    address_street = models.CharField(max_length=255, db_column='company_address_street',
-                                      blank=True, null=True)
-    address_brgy = models.CharField(max_length=100, db_column='company_address_brgy',
-                                    blank=True, null=True)
-    address_city = models.CharField(max_length=100, db_column='company_address_city',
-                                    blank=True, null=True)
+    address_bldg = models.CharField(max_length=255, db_column='company_address_bldg', blank=True, null=True)
+    address_street = models.CharField(max_length=255, db_column='company_address_street', blank=True, null=True)
+    address_brgy = models.CharField(max_length=100, db_column='company_address_brgy', blank=True, null=True)
+    address_city = models.CharField(max_length=100, db_column='company_address_city', blank=True, null=True)
 
     # other attributes
-    industry = models.CharField(max_length=100, db_column='company_industry',
-                                blank=True, null=True)
+    industry = models.CharField(max_length=100, db_column='company_industry', blank=True, null=True)
 
     # OPTIONAL bookkeeping columns (keep only if the table really has them)
     created_by = models.ForeignKey(
@@ -486,9 +480,8 @@ class Company(models.Model):
     # meta
     class Meta:
         db_table = 'pt_companies'
-        managed = False  # ← do **not** let Django create / alter the table
+        managed = False
 
-    # nice combined address string (optional)
     @property
     def full_address(self):
         parts = [self.address_bldg, self.address_street,
