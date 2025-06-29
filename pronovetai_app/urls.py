@@ -9,6 +9,9 @@ from pronovetai_app.views import (
     CurrentUserLogsView, ChangePasswordView, dashboard
 )
 
+from django.urls import path
+from django.views.generic import TemplateView
+
 router = routers.DefaultRouter()
 router.register(r'addresses', AddressViewSet)
 router.register(r'companies', CompanyViewSet)
@@ -33,4 +36,6 @@ urlpatterns = [
     path('api/users/me/change_password/', ChangePasswordView.as_view(), name='change_password'),
 
     path('api/dashboard/', dashboard, name='dashboard'),
+
+    path('', TemplateView.as_view(template_name='login.html'), name='login'),
 ]
