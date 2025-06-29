@@ -1,21 +1,29 @@
-# pronovetai_app/auth_serializers.py
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework import serializers
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
-    username_field = "user_login"          # use your legacy column name
+    """
+    Accepts legacy keys coming from the front-end:
+        user_login | user_pass
+    Maps them to Django’s canonical names:
+        username   | password
+    """
+
+    # declare the incoming JSON fields
+    user_login = serializers.CharField(write_only=True)
+    user_pass  = serializers.CharField(write_only=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # 1️⃣  make the auto-generated password field optional
+        # make the default 'username' and 'password' *optional*
+        # (they will be filled in validate())
+        self.fields["username"].required = False
         self.fields["password"].required = False
 
-        # 2️⃣  add the legacy password key that the front-end sends
-        self.fields["user_pass"] = serializers.CharField(write_only=True)
-
     def validate(self, attrs):
-        attrs = attrs.copy()                       # may be an immutable QueryDict
-        attrs["password"] = attrs.pop("user_pass")  # map legacy → real
+        attrs = attrs.copy()                # might be an immutable QueryDict
+        attrs["username"] = attrs.pop("user_login")
+        attrs["password"] = attrs.pop("user_pass")
         return super().validate(attrs)

@@ -30,8 +30,6 @@ urlpatterns = [
     path('api/register/staff', StaffRegistrationView.as_view(), name='staff_registration'),
     path('api/register/manager', ManagerRegistrationView.as_view(), name='manager_registration'),
 
-    # path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    # path('api/token/refresh', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh', TokenRefreshView.as_view(), name='token_refresh'),
 
