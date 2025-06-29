@@ -104,7 +104,7 @@ class AddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = Address
         fields = ['street_address', 'barangay',
-                  'city', 'zip_code', ]
+                  'city', ]
 
 
 class UserSerializer(serializers.ModelSerializer):

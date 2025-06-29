@@ -1,13 +1,15 @@
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework import routers
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework_simplejwt.views import TokenRefreshView
 from pronovetai_app.views import (
     AddressViewSet, UserViewSet, CompanyViewSet, ContactViewSet,
     BuildingViewSet, UnitViewSet, ODFormViewSet, BuildingImageViewSet,
     UnitImageViewSet, StaffRegistrationView, ManagerRegistrationView,
     CurrentUserLogsView, ChangePasswordView, dashboard
 )
+
+from .auth_views import CustomTokenObtainPairView
 
 from django.urls import path
 from django.views.generic import TemplateView
@@ -28,7 +30,9 @@ urlpatterns = [
     path('api/register/staff', StaffRegistrationView.as_view(), name='staff_registration'),
     path('api/register/manager', ManagerRegistrationView.as_view(), name='manager_registration'),
 
-    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    # path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    # path('api/token/refresh', TokenRefreshView.as_view(), name='token_refresh'),
+    path('api/token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh', TokenRefreshView.as_view(), name='token_refresh'),
 
     path('api/users/me/', UserViewSet.as_view(), name='current_user'),
