@@ -221,12 +221,11 @@ class Building(models.Model):
     is_strata = models.BooleanField(db_column='building_strata')
 
     # look-up tables (same as before)
-    grade = models.ForeignKey(
-        'BuildingGrade',
-        on_delete=models.SET_NULL,
-        null=True,
+    grade = models.CharField(
+        max_length=3,
         db_column='building_grade',  # <- matches MySQL
-        related_name='+'
+        blank=True,
+        null=True,
     )
     building_type = models.ForeignKey(
         'BuildingType',
@@ -286,6 +285,16 @@ class Building(models.Model):
         parts = [self.address_street, self.address_brgy, self.address_city]
         return ", ".join(p for p in parts if p)
 
+    @property
+    def grade_desc(self):
+        """
+        Return the verbose description (“Super Prime Grade A”, …)
+        corresponding to self.grade (“SPA”, …).
+        """
+        from .models import BuildingGrade  # local-scope import avoids circular ref
+        row = BuildingGrade.objects.filter(code=self.grade).first()
+        return row.description if row else None
+
     # ---------- meta ----------
     class Meta:
         db_table = 'pt_buildings'
@@ -296,15 +305,17 @@ class Building(models.Model):
 
 
 class BuildingGrade(models.Model):
-    id = models.AutoField(primary_key=True, db_column='grade_id')
-    description = models.CharField(max_length=50)
+    id = models.AutoField(primary_key=True, db_column='building_grade_id')
+    code = models.CharField(max_length=3, db_column='building_grade')
+    description = models.CharField(max_length=100, db_column='building_grade_desc')
 
     class Meta:
         db_table = 'pt_building_grades'
         managed = False
+        verbose_name = 'building grade'
 
     def __str__(self):
-        return self.description
+        return f'{self.code} - {self.description}'
 
 
 class BuildingType(models.Model):

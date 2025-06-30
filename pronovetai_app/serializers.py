@@ -165,17 +165,17 @@ class ContactSerializer(serializers.ModelSerializer):
 
 
 class BuildingSerializer(serializers.ModelSerializer):
+    # pull the *computed* property from the model
+    grade_desc = serializers.ReadOnlyField()
+    # plain code (“SPA”, …)
+    grade = serializers.CharField()
+
     class Meta:
-        model  = Building
+        model = Building
         fields = [
-            'id', 'name', 'grade', 'building_type',
-            'is_peza_certified', 'is_strata',
-            'year_built',
-            # flat address pieces straight from pt_buildings
-            'address_street',
-            'address_brgy',
-            'address_city',
-            'address_zip',
+            "id", "name", "grade", "grade_desc",
+            "is_peza_certified", "is_strata",
+            "address_city",
         ]
 
     def create(self, validated_data):
