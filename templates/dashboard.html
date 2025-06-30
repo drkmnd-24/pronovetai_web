@@ -79,7 +79,7 @@
             </li>
             <li
                 class="sidebar-item">
-                <a href="index.html" class='sidebar-link'>
+                <a href="{% url 'building_list' %}" class='sidebar-link'>
                     <i class="bi bi-house-door"></i>
                     <span>Building List</span>
                 </a>
@@ -116,7 +116,7 @@
                                 </div>
                                 <div class="col-md-8 col-lg-12 col-xl-12 col-xxl-7">
                                     <h6 class="text-muted font-semibold">Total Buildings</h6>
-                                    <h6 class="font-extrabold mb-0">112.000</h6>
+                                    <h6 id="stat-buildings" class="font-extrabold mb-0">1--</h6>
                                 </div>
                             </div>
                         </div>
@@ -133,7 +133,7 @@
                                 </div>
                                 <div class="col-md-8 col-lg-12 col-xl-12 col-xxl-7">
                                     <h6 class="text-muted font-semibold">Total Units</h6>
-                                    <h6 class="font-extrabold mb-0">183.000</h6>
+                                    <h6 id="stat-units" class="font-extrabold mb-0">--</h6>
                                 </div>
                             </div>
                         </div>
@@ -150,7 +150,7 @@
                                 </div>
                                 <div class="col-md-8 col-lg-12 col-xl-12 col-xxl-7">
                                     <h6 class="text-muted font-semibold">Total OD Forms</h6>
-                                    <h6 class="font-extrabold mb-0">80.000</h6>
+                                    <h6 id="stat-odforms" class="font-extrabold mb-0">--</h6>
                                 </div>
                             </div>
                         </div>
@@ -167,7 +167,7 @@
                                 </div>
                                 <div class="col-md-8 col-lg-12 col-xl-12 col-xxl-7">
                                     <h6 class="text-muted font-semibold">Total Users</h6>
-                                    <h6 class="font-extrabold mb-0">112</h6>
+                                    <h6 id="stat-users" class="font-extrabold mb-0">--</h6>
                                 </div>
                             </div>
                         </div>
@@ -389,6 +389,31 @@
 <script src="{% static '/assets/static/js/pages/dashboard.js' %}"></script>
 <script type="module" src="/src/main.jsx"></script>
 
+<script>
+    (function () {
+        const token = localStorage.getItem("access");
+        if (!token) return window.location.href = "/";
+
+        fetch("/api/dashboard/", {
+            headers: { "Authorization": `Bearer ${token}`}
+        })
+            .then(r => {
+                if (r.status === 401) {
+                    localStorage.clear();
+                    return window.location.href = "/";
+                }
+                return r.json();
+            })
+            .then(data => {
+                if (!data) return;
+                document.getElementById("stat-buildings").textContent = data.buildings ?? 0;
+                document.getElementById("stat-units").textContent = data.units ?? 0;
+                document.getElementById("stat-odforms").textContent = data.odforms ?? 0;
+                document.getElementById("stat-users").textContent = data.users ?? 0;
+            })
+            .catch(console.error);
+    })();
+</script>
 </body>
 
 </html>

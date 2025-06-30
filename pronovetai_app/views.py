@@ -30,6 +30,7 @@ def dashboard(request):
         'companies': Company.objects.count(),
         'contact': Contact.objects.count(),
         'odforms': ODForm.objects.count(),
+        'users': User.objects.count(),
     })
 
 
