@@ -199,14 +199,26 @@ class BuildingSerializer(serializers.ModelSerializer):
 
 
 class UnitSerializer(serializers.ModelSerializer):
-    building_name = serializers.CharField(source='building.name', read_only=True)
+    building_name = serializers.CharField(
+        source="building.name", read_only=True
+    )
+    marketing_status_display = serializers.SerializerMethodField()
+    vacancy_status_display = serializers.SerializerMethodField()
 
     class Meta:
         model = Unit
         fields = (
-            'id', 'name', 'building_name', 'floor',
-            'marketing_status', 'vacancy_status', 'foreclosed'
+            "id", "name", "building_name", "floor",
+            "marketing_status", "marketing_status_display",
+            "vacancy_status", "vacancy_status_display",
+            "foreclosed",
         )
+
+    def get_marketing_status_display(self, obj):
+        return obj.get_marketing_status_display()
+
+    def get_vacancy_status_display(self, obj):
+        return obj.get_vacancy_status_display()
 
 
 class ODFormSerializer(serializers.ModelSerializer):
