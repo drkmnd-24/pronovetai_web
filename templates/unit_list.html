@@ -161,10 +161,10 @@
 <script src="{% static '/assets/extensions/datatables.net-bs5/js/dataTables.bootstrap5.min.js' %}"></script>
 
 <script>
-  $(document).ready(function () {          /* <-- moved into ready() */
+  $(document).ready(function () {
     const token = localStorage.getItem('access');
     if (!token) {
-      location.href = '/';                 // back to login
+      location.href = '/';
       return;
     }
 
@@ -177,10 +177,10 @@
       },
       columns: [
         { data: 'name' },
-        { data: 'building_name',             defaultContent: '—' },
-        { data: 'floor',                     defaultContent: '—' },
-        { data: 'marketing_status_display',  defaultContent: '—' },
-        { data: 'vacancy_status_display',    defaultContent: '—' },
+        { data: 'building_name', defaultContent: '—' },
+        { data: 'floor', defaultContent: '—' },
+        { data: 'marketing_status_display', defaultContent: '—' },
+        { data: 'vacancy_status_display', defaultContent: '—' },
         {
           data: 'foreclosed',
           render: d => d
