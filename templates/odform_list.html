@@ -27,24 +27,31 @@
       <div class="page-title">
         <div class="row">
           <div class="col-12 col-md-6 order-md-1 order-last">
-            <h3>OD Forms</h3>
+            <h3>OD-Forms</h3>
             <p class="text-subtitle text-muted">Interactive Datatable for OD-Forms</p>
           </div>
           <div class="col-12 col-md-6 order-md-2 order-first">
             <nav aria-label="breadcrumb" class="breadcrumb-header float-start float-lg-end">
               <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
-                <li class="breadcrumb-item active" aria-current="page">OD Forms</li>
+                <li class="breadcrumb-item active" aria-current="page">OD-Forms</li>
               </ol>
             </nav>
           </div>
         </div>
       </div>
 
-      <!-- table -->
+      <!-- ───────────── table & add button ───────────── -->
       <section class="section">
         <div class="card">
           <div class="card-body">
+            <!-- ADD BUTTON -->
+            <button class="btn btn-primary mb-3"
+                    data-bs-toggle="modal"
+                    data-bs-target="#odformModal">
+              <i class="bi bi-plus-lg me-1"></i> Add OD-Form
+            </button>
+
             <div class="table-responsive">
               <table id="odforms-table" class="table table-striped">
                 <thead>
@@ -67,6 +74,55 @@
   </div>
 </div>
 
+<!-- ───────────── scrollable modal ───────────── -->
+<div class="modal fade" id="odformModal" tabindex="-1"
+     aria-labelledby="odformModalTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="odformModalTitle">New OD-Form</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                aria-label="Close"></button>
+      </div>
+
+      <!-- ▶️  Put your real form fields here  ◀️ -->
+      <form id="odformForm">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Call taken by</label>
+            <input name="call_taken_by" class="form-control" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Intent</label>
+            <select name="intent" class="form-select" required>
+              <option value="" hidden>Choose…</option>
+              <option value="lease">Lease</option>
+              <option value="sale">Sale</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Notes</label>
+            <textarea name="notes" rows="5" class="form-control"></textarea>
+          </div>
+
+          <!-- plenty of fields?  The modal scrolls 👍 -->
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light-secondary"
+                  data-bs-dismiss="modal">Cancel</button>
+          <button class="btn btn-primary" id="saveOdFormBtn">
+            Save
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 <!-- scripts -->
 <script src="{% static 'assets/static/js/components/dark.js' %}"></script>
 <script src="{% static 'assets/extensions/perfect-scrollbar/perfect-scrollbar.min.js' %}"></script>
@@ -77,14 +133,15 @@
 <script src="{% static 'assets/extensions/datatables.net-bs5/js/dataTables.bootstrap5.min.js' %}"></script>
 
 <script>
+  /* ---------- DataTable ---------- */
+  const $table = $('#odforms-table');
+  let dt;            // will hold the DataTable API instance
+
   $(function () {
     const token = localStorage.getItem('access');
-    if (!token) {
-      location.href = '/';          // redirect to login if not authenticated
-      return;
-    }
+    if (!token) { location.href = '/'; return; }
 
-    $('#odforms-table').DataTable({
+    dt = $table.DataTable({
       ajax: {
         url: '/api/odforms/',
         headers: { Authorization: `Bearer ${token}` },
@@ -93,28 +150,45 @@
       },
       columns: [
         { data: 'id' },
-        {                       // created → YYYY-MM-DD
+        {
           data: 'created',
           render: v => v ? v.slice(0,10) : '—',
           className: 'whitespace-nowrap'
         },
-        { data: 'call_taken_by',  defaultContent: '—' },
-        { data: 'intent',         defaultContent: '—' },
-        {                       // status badge
+        { data: 'call_taken_by', defaultContent: '—' },
+        { data: 'intent',        defaultContent: '—' },
+        {
           data: 'status',
           render: s => {
-            const map = { draft:'secondary', pending:'warning', closed:'success', cancelled:'danger' };
-            const cls = map[s] || 'primary';
+            const map = { draft:'secondary', pending:'warning',
+                          active:'primary', done_deal:'success',
+                          inactive:'secondary', cancelled:'danger' };
+            const cls = map[s] || 'light';
             return `<span class="badge bg-${cls}">${s || '—'}</span>`;
           },
           className: 'text-center'
         }
       ],
-      order: [[1,'desc']],       // newest first
+      order: [[1,'desc']],
       pageLength: 25,
       lengthMenu: [25, 50, 100],
       responsive: true
     });
+  });
+
+  /* ---------- (placeholder) save handler ---------- */
+  $('#saveOdFormBtn').on('click', function (e) {
+    e.preventDefault();
+
+    // TODO: send POST to /api/odforms/
+    // const data = Object.fromEntries(new FormData(document.getElementById('odformForm')));
+    // fetch('/api/odforms/', { method:'POST', headers:{...}, body:JSON.stringify(data) })
+
+    // close the modal
+    bootstrap.Modal.getInstance(document.getElementById('odformModal')).hide();
+
+    // refresh the DataTable
+    dt && dt.ajax.reload(null, false);   // keep current page
   });
 </script>
 </body>
