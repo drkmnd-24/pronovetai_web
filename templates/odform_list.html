@@ -1,0 +1,121 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>OD-Forms – PronoveTAI</title>
+
+  <!-- styles -->
+  <link rel="shortcut icon" href="{% static 'assets/compiled/svg/favicon.svg' %}">
+  <link rel="stylesheet" href="{% static 'assets/extensions/datatables.net-bs5/css/dataTables.bootstrap5.min.css' %}">
+  <link rel="stylesheet" href="{% static 'assets/compiled/css/table-datatable-jquery.css' %}">
+  <link rel="stylesheet" href="{% static 'assets/compiled/css/app.css' %}">
+  <link rel="stylesheet" href="{% static 'assets/compiled/css/app-dark.css' %}">
+</head>
+<body>
+<script src="{% static 'assets/static/js/initTheme.js' %}"></script>
+
+<div id="app">
+  {% include '_sidebar.html' with active="odform_list" %}
+  <div id="main">
+    <header class="mb-3">
+      <a href="#" class="burger-btn d-block d-xl-none"><i class="bi bi-justify fs-3"></i></a>
+    </header>
+
+    <div class="page-heading">
+      <div class="page-title">
+        <div class="row">
+          <div class="col-12 col-md-6 order-md-1 order-last">
+            <h3>OD Forms</h3>
+            <p class="text-subtitle text-muted">Interactive Datatable for OD-Forms</p>
+          </div>
+          <div class="col-12 col-md-6 order-md-2 order-first">
+            <nav aria-label="breadcrumb" class="breadcrumb-header float-start float-lg-end">
+              <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                <li class="breadcrumb-item active" aria-current="page">OD Forms</li>
+              </ol>
+            </nav>
+          </div>
+        </div>
+      </div>
+
+      <!-- table -->
+      <section class="section">
+        <div class="card">
+          <div class="card-body">
+            <div class="table-responsive">
+              <table id="odforms-table" class="table table-striped">
+                <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Created&nbsp;On</th>
+                  <th>Call&nbsp;Taken&nbsp;By</th>
+                  <th>Intent</th>
+                  <th>Status</th>
+                </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+    {% include '_footer.html' %}
+  </div>
+</div>
+
+<!-- scripts -->
+<script src="{% static 'assets/static/js/components/dark.js' %}"></script>
+<script src="{% static 'assets/extensions/perfect-scrollbar/perfect-scrollbar.min.js' %}"></script>
+<script src="{% static 'assets/compiled/js/app.js' %}"></script>
+
+<script src="{% static 'assets/extensions/jquery/jquery.min.js' %}"></script>
+<script src="{% static 'assets/extensions/datatables.net/js/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'assets/extensions/datatables.net-bs5/js/dataTables.bootstrap5.min.js' %}"></script>
+
+<script>
+  $(function () {
+    const token = localStorage.getItem('access');
+    if (!token) {
+      location.href = '/';          // redirect to login if not authenticated
+      return;
+    }
+
+    $('#odforms-table').DataTable({
+      ajax: {
+        url: '/api/odforms/',
+        headers: { Authorization: `Bearer ${token}` },
+        dataSrc: json => Array.isArray(json) ? json : json.results,
+        error:  xhr  => alert(`Could not load OD-forms (${xhr.status} ${xhr.statusText})`)
+      },
+      columns: [
+        { data: 'id' },
+        {                       // created → YYYY-MM-DD
+          data: 'created',
+          render: v => v ? v.slice(0,10) : '—',
+          className: 'whitespace-nowrap'
+        },
+        { data: 'call_taken_by',  defaultContent: '—' },
+        { data: 'intent',         defaultContent: '—' },
+        {                       // status badge
+          data: 'status',
+          render: s => {
+            const map = { draft:'secondary', pending:'warning', closed:'success', cancelled:'danger' };
+            const cls = map[s] || 'primary';
+            return `<span class="badge bg-${cls}">${s || '—'}</span>`;
+          },
+          className: 'text-center'
+        }
+      ],
+      order: [[1,'desc']],       // newest first
+      pageLength: 25,
+      lengthMenu: [25, 50, 100],
+      responsive: true
+    });
+  });
+</script>
+</body>
+</html>

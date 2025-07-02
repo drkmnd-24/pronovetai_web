@@ -38,10 +38,11 @@ urlpatterns = [
     path('api/users/me/change_password/', ChangePasswordView.as_view(), name='change_password'),
 
     path('api/dashboard/', dashboard, name='dashboard'),
-
+    # ======================= FRONT-END TEMPLATES ================================= #
     path('', TemplateView.as_view(template_name='login.html'), name='login'),
     path('dashboard/', TemplateView.as_view(template_name='dashboard.html'), name='dashboard'),
     path('buildinglist/', TemplateView.as_view(template_name='building_list.html'), name='building_list'),
     path('unitlist/', TemplateView.as_view(template_name='unit_list.html'), name='unit_list'),
     path('companylist/', TemplateView.as_view(template_name='company_list.html'), name='company_list'),
+    path('odformlist/', TemplateView.as_view(template_name='odform_list.html'), name='odform_list'),
 ]
