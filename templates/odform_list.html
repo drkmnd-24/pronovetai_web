@@ -2,125 +2,227 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>OD-Forms – PronoveTAI</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>OD-Forms – PronoveTAI</title>
 
-  <!-- styles -->
-  <link rel="shortcut icon" href="{% static 'assets/compiled/svg/favicon.svg' %}">
-  <link rel="stylesheet" href="{% static 'assets/extensions/datatables.net-bs5/css/dataTables.bootstrap5.min.css' %}">
-  <link rel="stylesheet" href="{% static 'assets/compiled/css/table-datatable-jquery.css' %}">
-  <link rel="stylesheet" href="{% static 'assets/compiled/css/app.css' %}">
-  <link rel="stylesheet" href="{% static 'assets/compiled/css/app-dark.css' %}">
+    <!-- styles -->
+    <link rel="shortcut icon" href="{% static 'assets/compiled/svg/favicon.svg' %}">
+    <link rel="stylesheet" href="{% static 'assets/extensions/datatables.net-bs5/css/dataTables.bootstrap5.min.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/compiled/css/table-datatable-jquery.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/compiled/css/app.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/compiled/css/app-dark.css' %}">
 </head>
 <body>
 <script src="{% static 'assets/static/js/initTheme.js' %}"></script>
 
 <div id="app">
-  {% include '_sidebar.html' with active="odform_list" %}
-  <div id="main">
-    <header class="mb-3">
-      <a href="#" class="burger-btn d-block d-xl-none"><i class="bi bi-justify fs-3"></i></a>
-    </header>
+    {% include '_sidebar.html' with active="odform_list" %}
+    <div id="main">
+        <header class="mb-3">
+            <a href="#" class="burger-btn d-block d-xl-none"><i class="bi bi-justify fs-3"></i></a>
+        </header>
 
-    <div class="page-heading">
-      <div class="page-title">
-        <div class="row">
-          <div class="col-12 col-md-6 order-md-1 order-last">
-            <h3>OD-Forms</h3>
-            <p class="text-subtitle text-muted">Interactive Datatable for OD-Forms</p>
-          </div>
-          <div class="col-12 col-md-6 order-md-2 order-first">
-            <nav aria-label="breadcrumb" class="breadcrumb-header float-start float-lg-end">
-              <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
-                <li class="breadcrumb-item active" aria-current="page">OD-Forms</li>
-              </ol>
-            </nav>
-          </div>
-        </div>
-      </div>
-
-      <!-- ───────────── table & add button ───────────── -->
-      <section class="section">
-        <div class="card">
-          <div class="card-body">
-            <!-- ADD BUTTON -->
-            <button class="btn btn-primary mb-3"
-                    data-bs-toggle="modal"
-                    data-bs-target="#odformModal">
-              <i class="bi bi-plus-lg me-1"></i> Add OD-Form
-            </button>
-
-            <div class="table-responsive">
-              <table id="odforms-table" class="table table-striped">
-                <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Created&nbsp;On</th>
-                  <th>Call&nbsp;Taken&nbsp;By</th>
-                  <th>Intent</th>
-                  <th>Status</th>
-                </tr>
-                </thead>
-                <tbody></tbody>
-              </table>
+        <div class="page-heading">
+            <div class="page-title">
+                <div class="row">
+                    <div class="col-12 col-md-6 order-md-1 order-last">
+                        <h3>OD-Forms</h3>
+                        <p class="text-subtitle text-muted">Interactive Datatable for OD-Forms</p>
+                    </div>
+                    <div class="col-12 col-md-6 order-md-2 order-first">
+                        <nav aria-label="breadcrumb" class="breadcrumb-header float-start float-lg-end">
+                            <ol class="breadcrumb">
+                                <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                                <li class="breadcrumb-item active" aria-current="page">OD-Forms</li>
+                            </ol>
+                        </nav>
+                    </div>
+                </div>
             </div>
-          </div>
+
+            <!-- ───────────── table & add button ───────────── -->
+            <section class="section">
+                <div class="card">
+                    <div class="card-body">
+                        <!-- ADD BUTTON -->
+                        <button class="btn btn-primary mb-3"
+                                data-bs-toggle="modal"
+                                data-bs-target="#exampleModalScrollable">
+                            <i class="bi bi-plus-lg me-1"></i> Add OD-Form
+                        </button>
+
+                        <div class="table-responsive">
+                            <table id="odforms-table" class="table table-striped">
+                                <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Created&nbsp;On</th>
+                                    <th>Call&nbsp;Taken&nbsp;By</th>
+                                    <th>Intent</th>
+                                    <th>Status</th>
+                                </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
         </div>
-      </section>
+        {% include '_footer.html' %}
     </div>
-    {% include '_footer.html' %}
-  </div>
 </div>
 
 <!-- ───────────── scrollable modal ───────────── -->
-<div class="modal fade" id="odformModal" tabindex="-1"
-     aria-labelledby="odformModalTitle" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-scrollable">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="odformModalTitle">New OD-Form</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"
-                aria-label="Close"></button>
-      </div>
-
-      <!-- ▶️  Put your real form fields here  ◀️ -->
-      <form id="odformForm">
-        <div class="modal-body">
-          <div class="mb-3">
-            <label class="form-label">Call taken by</label>
-            <input name="call_taken_by" class="form-control" required>
-          </div>
-
-          <div class="mb-3">
-            <label class="form-label">Intent</label>
-            <select name="intent" class="form-select" required>
-              <option value="" hidden>Choose…</option>
-              <option value="lease">Lease</option>
-              <option value="sale">Sale</option>
-              <option value="other">Other</option>
-            </select>
-          </div>
-
-          <div class="mb-3">
-            <label class="form-label">Notes</label>
-            <textarea name="notes" rows="5" class="form-control"></textarea>
-          </div>
-
-          <!-- plenty of fields?  The modal scrolls 👍 -->
+<div class="col-md-6 col-12">
+    <div class="modal fade" id="exampleModalScrollable" tabindex="-1" role="dialog"
+         aria-labelledby="exampleModalScrollableTitle" aria-hidden="true">
+        <div class="modal-xl modal-dialog modal-dialog-scrollable" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalScrollableTitle">Create New OD</h5>
+                    <button type="button" class="close" data-bs-dismiss="modal"
+                            aria-label="Close">
+                        <i data-feather="x"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="card-content">
+                        <div class="card-body">
+                            <form class="form">
+                                <div class="row">
+                                    <div class="col-md-6 col-12">
+                                        <div class="form-group">
+                                            <label for="first-name-column">Date</label>
+                                            <input type="date" id="date_today"
+                                                   class="form-control mb-3 flatpickr-calendar" name="date_today">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 col-12">
+                                        <div class="form-group">
+                                            <label for="first-name-column">Call Taken/Made By</label>
+                                            <input type="text" id="call_taken" class="form-control" name="fname-column">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 col-12">
+                                        <div class="form-group">
+                                            <label for="last-name-column">Type of Call</label>
+                                            <select name="call_type" id="call_type" class="form-select">
+                                                <option value="" hidden>Choose...</option>
+                                                <option value="">Inbound</option>
+                                                <option value="">Outbound</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 col-12">
+                                        <div class="form-group">
+                                            <label for="last-name-column">Source of Call</label>
+                                            <select name="source_of_call" id="source_of_call" class="form-select">
+                                                <option value="" hidden>Choose...</option>
+                                                <option value="">News Paper</option>
+                                                <option value="">Old Client</option>
+                                                <option value="">Online Marketing</option>
+                                                <option value="">Referal</option>
+                                                <option value="">Signage</option>
+                                                <option value="">Website</option>
+                                                <option value="">Yellow Pages</option>
+                                                <option value="">Others</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 col-12">
+                                        <div class="form-group">
+                                            <label for="last-name-column">Type of Caller</label>
+                                            <select name="call_type" id="call_type" class="form-select">
+                                                <option value="" hidden>Choose...</option>
+                                                <option value="">Broker</option>
+                                                <option value="">Direct Buyer/Leasee</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 col-12">
+                                        <div class="form-group">
+                                            <label for="last-name-column">Intent</label>
+                                            <select name="call_type" id="call_type" class="form-select">
+                                                <option value="" hidden>Choose...</option>
+                                                <option value="">To Rent</option>
+                                                <option value="">To Buy</option>
+                                                <option value="">Both</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 col-12">
+                                        <div class="form-group">
+                                            <label for="last-name-column">Size Minimum </label>
+                                            <input type="text" id="size_min" class="form-control" name="size_min"
+                                                   placeholder="per square meter">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 col-12">
+                                        <div class="form-group">
+                                            <label for="last-name-column">Size Maximum </label>
+                                            <input type="text" id="size_max" class="form-control" name="size_max"
+                                                   placeholder="per square meter">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 col-12">
+                                        <div class="form-group">
+                                            <label for="last-name-column">Budget Minimum </label>
+                                            <input type="text" id="size_min" class="form-control" name="size_min"
+                                                   placeholder="PHP">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 col-12">
+                                        <div class="form-group">
+                                            <label for="last-name-column">Budget Maximum </label>
+                                            <input type="text" id="size_max" class="form-control" name="size_max"
+                                                   placeholder="PHP">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 col-12">
+                                        <div class="form-group">
+                                            <label for="last-name-column">Preferred Location </label>
+                                            <input type="text" id="size_max" class="form-control" name="size_max">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 col-12">
+                                        <div class="form-floating">
+                            <textarea class="form-control" placeholder="Leave a comment here"
+                                      id="floatingTextarea"></textarea>
+                                            <label for="floatingTextarea">Notes</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 col-12">
+                                        <div class="form-group">
+                                            <label for="last-name-column">Status</label>
+                                            <select name="call_type" id="call_type" class="form-select">
+                                                <option value="" hidden>Choose...</option>
+                                                <option value="">Active</option>
+                                                <option value="">Inactive</option>
+                                                <option value="">Done Deal</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light-secondary"
+                            data-bs-dismiss="modal">
+                        <i class="bx bx-x d-block d-sm-none"></i>
+                        <span class="d-none d-sm-block">Close</span>
+                    </button>
+                    <button type="button" class="btn btn-primary ms-1" data-bs-dismiss="modal">
+                        <i class="bx bx-check d-block d-sm-none"></i>
+                        <span class="d-none d-sm-block">Create OD</span>
+                    </button>
+                </div>
+            </div>
         </div>
-
-        <div class="modal-footer">
-          <button type="button" class="btn btn-light-secondary"
-                  data-bs-dismiss="modal">Cancel</button>
-          <button class="btn btn-primary" id="saveOdFormBtn">
-            Save
-          </button>
-        </div>
-      </form>
     </div>
-  </div>
 </div>
 
 <!-- scripts -->
@@ -133,63 +235,68 @@
 <script src="{% static 'assets/extensions/datatables.net-bs5/js/dataTables.bootstrap5.min.js' %}"></script>
 
 <script>
-  /* ---------- DataTable ---------- */
-  const $table = $('#odforms-table');
-  let dt;            // will hold the DataTable API instance
+    /* ---------- DataTable ---------- */
+    const $table = $('#odforms-table');
+    let dt;            // will hold the DataTable API instance
 
-  $(function () {
-    const token = localStorage.getItem('access');
-    if (!token) { location.href = '/'; return; }
-
-    dt = $table.DataTable({
-      ajax: {
-        url: '/api/odforms/',
-        headers: { Authorization: `Bearer ${token}` },
-        dataSrc: json => Array.isArray(json) ? json : json.results,
-        error:  xhr  => alert(`Could not load OD-forms (${xhr.status} ${xhr.statusText})`)
-      },
-      columns: [
-        { data: 'id' },
-        {
-          data: 'created',
-          render: v => v ? v.slice(0,10) : '—',
-          className: 'whitespace-nowrap'
-        },
-        { data: 'call_taken_by', defaultContent: '—' },
-        { data: 'intent',        defaultContent: '—' },
-        {
-          data: 'status',
-          render: s => {
-            const map = { draft:'secondary', pending:'warning',
-                          active:'primary', done_deal:'success',
-                          inactive:'secondary', cancelled:'danger' };
-            const cls = map[s] || 'light';
-            return `<span class="badge bg-${cls}">${s || '—'}</span>`;
-          },
-          className: 'text-center'
+    $(function () {
+        const token = localStorage.getItem('access');
+        if (!token) {
+            location.href = '/';
+            return;
         }
-      ],
-      order: [[1,'desc']],
-      pageLength: 25,
-      lengthMenu: [25, 50, 100],
-      responsive: true
+
+        dt = $table.DataTable({
+            ajax: {
+                url: '/api/odforms/',
+                headers: {Authorization: `Bearer ${token}`},
+                dataSrc: json => Array.isArray(json) ? json : json.results,
+                error: xhr => alert(`Could not load OD-forms (${xhr.status} ${xhr.statusText})`)
+            },
+            columns: [
+                {data: 'id'},
+                {
+                    data: 'created',
+                    render: v => v ? v.slice(0, 10) : '—',
+                    className: 'whitespace-nowrap'
+                },
+                {data: 'call_taken_by', defaultContent: '—'},
+                {data: 'intent', defaultContent: '—'},
+                {
+                    data: 'status',
+                    render: s => {
+                        const map = {
+                            draft: 'secondary', pending: 'warning',
+                            active: 'primary', done_deal: 'success',
+                            inactive: 'secondary', cancelled: 'danger'
+                        };
+                        const cls = map[s] || 'light';
+                        return `<span class="badge bg-${cls}">${s || '—'}</span>`;
+                    },
+                    className: 'text-center'
+                }
+            ],
+            order: [[1, 'desc']],
+            pageLength: 25,
+            lengthMenu: [25, 50, 100],
+            responsive: true
+        });
     });
-  });
 
-  /* ---------- (placeholder) save handler ---------- */
-  $('#saveOdFormBtn').on('click', function (e) {
-    e.preventDefault();
+    /* ---------- (placeholder) save handler ---------- */
+    $('#saveOdFormBtn').on('click', function (e) {
+        e.preventDefault();
 
-    // TODO: send POST to /api/odforms/
-    // const data = Object.fromEntries(new FormData(document.getElementById('odformForm')));
-    // fetch('/api/odforms/', { method:'POST', headers:{...}, body:JSON.stringify(data) })
+        // TODO: send POST to /api/odforms/
+        // const data = Object.fromEntries(new FormData(document.getElementById('odformForm')));
+        // fetch('/api/odforms/', { method:'POST', headers:{...}, body:JSON.stringify(data) })
 
-    // close the modal
-    bootstrap.Modal.getInstance(document.getElementById('odformModal')).hide();
+        // close the modal
+        bootstrap.Modal.getInstance(document.getElementById('odformModal')).hide();
 
-    // refresh the DataTable
-    dt && dt.ajax.reload(null, false);   // keep current page
-  });
+        // refresh the DataTable
+        dt && dt.ajax.reload(null, false);   // keep current page
+    });
 </script>
 </body>
 </html>
