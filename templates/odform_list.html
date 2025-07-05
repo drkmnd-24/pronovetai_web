@@ -102,23 +102,24 @@
                                     <div class="col-md-6 col-12">
                                         <div class="form-group">
                                             <label for="first-name-column">Call Taken/Made By</label>
-                                            <input type="text" class="form-control" name="call_taken_by">
+                                            <input type="text" class="form-control" name="call_taken_by" required>
                                         </div>
                                     </div>
                                     <div class="col-md-6 col-12">
                                         <div class="form-group">
                                             <label for="last-name-column">Type of Call</label>
-                                            <select name="type_of_call" class="form-select">
+                                            <select name="type_of_call" class="form-select" required>
                                                 <option value="" hidden>Choose...</option>
-                                                <option value="">Inbound</option>
-                                                <option value="">Outbound</option>
+                                                <option value="inbound">Inbound</option>
+                                                <option value="outbound">Outbound</option>
                                             </select>
                                         </div>
                                     </div>
                                     <div class="col-md-6 col-12">
                                         <div class="form-group">
                                             <label for="last-name-column">Source of Call</label>
-                                            <select name="source_of_call" id="source_of_call" class="form-select">
+                                            <select name="source_of_call" id="source_of_call" class="form-select"
+                                                    required>
                                                 <option hidden value>Choose…</option>
                                                 <option value="newspaper">Newspaper</option>
                                                 <option value="old_client">Old client</option>
@@ -134,7 +135,7 @@
                                     <div class="col-md-6 col-12">
                                         <div class="form-group">
                                             <label for="last-name-column">Type of Caller</label>
-                                            <select name="type_of_caller" class="form-select">
+                                            <select name="type_of_caller" class="form-select" required>
                                                 <option hidden value>Choose…</option>
                                                 <option value="broker">Broker</option>
                                                 <option value="direct">Direct buyer / lessee</option>
@@ -144,54 +145,70 @@
                                     <div class="col-md-6 col-12">
                                         <div class="form-group">
                                             <label for="last-name-column">Intent</label>
-                                            <select name="intent" class="form-select">
+                                            <select name="intent" class="form-select" required>
                                                 <option hidden value>Choose…</option>
-                                                <option value="lease">Lease</option>
-                                                <option value="sale">Purchase</option>
+                                                <option value="rent">Lease / Rent</option>
+                                                <option value="buy">Purchase</option>
                                                 <option value="both">Both</option>
                                             </select>
                                         </div>
                                     </div>
                                     <div class="col-md-6 col-12">
                                         <div class="form-group">
+                                            <label class="form-label">Purpose</label>
+                                            <select name="purpose" class="form-select" required>
+                                                <option hidden value>Choose...</option>
+                                                <option value="expanding">Expanding</option>
+                                                <option value="relocating">Relocating</option>
+                                                <option value="new_office">New Office</option>
+                                                <option value="consolidating">Consolidating</option>
+                                                <option value="downsizing">Downsizing</option>
+                                                <option value="upgrading">Upgrading</option>
+                                                <option value="expanding_retaining">Expand &amp; retain</option>
+                                                <option value="others">Others</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 col-12">
+                                        <div class="form-group">
                                             <label class="form-label">Size (min&nbsp;㎡)</label>
-                                            <input type="number" class="form-control" name="size_minimum">
+                                            <input type="number" class="form-control" name="size_minimum" required>
                                         </div>
                                     </div>
                                     <div class="col-md-6 col-12">
                                         <div class="form-group">
                                             <label for="last-name-column">Size (max&nbsp;㎡) </label>
-                                            <input type="text" class="form-control" name="size_maximum">
+                                            <input type="text" class="form-control" name="size_maximum" required>
                                         </div>
                                     </div>
                                     <div class="col-md-6 col-12">
                                         <div class="form-group">
                                             <label for="last-name-column">Budget (min ₱) </label>
-                                            <input name="budget_minimum" type="number" class="form-control">
+                                            <input name="budget_minimum" type="number" class="form-control" required>
                                         </div>
                                     </div>
                                     <div class="col-md-6 col-12">
                                         <div class="form-group">
                                             <label class="form-label">Budget (max ₱)</label>
-                                            <input name="budget_maximum" type="number" class="form-control">
+                                            <input name="budget_maximum" type="number" class="form-control" required>
                                         </div>
                                     </div>
                                     <div class="col-md-6 col-12">
                                         <div class="form-group">
                                             <label for="last-name-column">Preferred Location </label>
-                                            <input type="text" class="form-control" name="preferred_location">
+                                            <input type="text" class="form-control" name="preferred_location" required>
                                         </div>
                                     </div>
                                     <div class="col-md-6 col-12">
                                         <div class="form-floating">
                                             <label for="floatingTextarea">Notes</label>
-                                            <textarea name="notes" rows="4" class="form-control"></textarea>
+                                            <textarea name="notes" rows="4" class="form-control" required></textarea>
                                         </div>
                                     </div>
                                     <div class="col-md-6 col-12">
                                         <div class="form-group">
                                             <label for="last-name-column">Status</label>
-                                            <select name="status" class="form-select">
+                                            <select name="status" class="form-select" required>
                                                 <option hidden value>Choose…</option>
                                                 <option value="active">Active</option>
                                                 <option value="inactive">Inactive</option>
@@ -230,9 +247,9 @@
 <script src="{% static 'assets/extensions/datatables.net-bs5/js/dataTables.bootstrap5.min.js' %}"></script>
 
 <script>
-  /* ---------- bootstrap helpers ---------- */
-  const toast = msg => {
-    const el = $(`
+    /* ---------- bootstrap helpers ---------- */
+    const toast = msg => {
+        const el = $(`
       <div class="toast align-items-center text-bg-success border-0 position-fixed bottom-0 end-0 m-3"
            role="alert" aria-live="assertive" aria-atomic="true">
         <div class="d-flex">
@@ -240,76 +257,88 @@
           <button class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
         </div>
       </div>`).appendTo('body');
-    new bootstrap.Toast(el[0]).show();
-  };                                       /* ← semicolon added */
+        new bootstrap.Toast(el[0]).show();
+    };                                       /* ← semicolon added */
 
-  /* ---------- DataTable ---------- */
-  const $table = $('#odforms-table');
-  let dt;
+    /* ---------- DataTable ---------- */
+    const $table = $('#odforms-table');
+    let dt;
 
-  $(function () {
-    const token = localStorage.getItem('access');
-    if (!token) { location.href = '/'; return; }
+    $(function () {
+        const token = localStorage.getItem('access');
+        if (!token) {
+            location.href = '/';
+            return;
+        }
 
-    dt = $table.DataTable({
-      ajax: {
-        url: '/api/odforms/',
-        headers: { Authorization: `Bearer ${token}` },
-        dataSrc: json => Array.isArray(json) ? json : json.results,
-        error:  xhr  => alert(`Could not load OD-forms (${xhr.status} ${xhr.statusText})`)
-      },
-      columns: [
-        { data:'id' },
-        { data:'created', render:v=>v ? v.slice(0,10) : '—',
-          className:'whitespace-nowrap' },
-        { data:'call_taken_by', defaultContent:'—' },
-        { data:'intent',        defaultContent:'—' },
-        { data:'status', className:'text-center',
-          render:s=>{
-            const m={draft:'secondary',pending:'warning',active:'primary',
-                     done_deal:'success',inactive:'secondary',cancelled:'danger'};
-            return `<span class="badge bg-${m[s]||'light'}">${s||'—'}</span>`;
-          }}
-      ],
-      order: [[1,'desc']],
-      pageLength: 25,
-      lengthMenu: [25,50,100],
-      responsive: true
+        dt = $table.DataTable({
+            ajax: {
+                url: '/api/odforms/',
+                headers: {Authorization: `Bearer ${token}`},
+                dataSrc: json => Array.isArray(json) ? json : json.results,
+                error: xhr => alert(`Could not load OD-forms (${xhr.status} ${xhr.statusText})`)
+            },
+            columns: [
+                {data: 'id'},
+                {
+                    data: 'created', render: v => v ? v.slice(0, 10) : '—',
+                    className: 'whitespace-nowrap'
+                },
+                {data: 'call_taken_by', defaultContent: '—'},
+                {data: 'intent', defaultContent: '—'},
+                {
+                    data: 'status', className: 'text-center',
+                    render: s => {
+                        const m = {
+                            draft: 'secondary', pending: 'warning', active: 'primary',
+                            done_deal: 'success', inactive: 'secondary', cancelled: 'danger'
+                        };
+                        return `<span class="badge bg-${m[s] || 'light'}">${s || '—'}</span>`;
+                    }
+                }
+            ],
+            order: [[1, 'desc']],
+            pageLength: 25,
+            lengthMenu: [25, 50, 100],
+            responsive: true
+        });
     });
-  });
 
-  /* ---------- save handler ---------- */
-  $('#saveOdFormBtn').on('click', function (e) {
-    e.preventDefault();
-    const token = localStorage.getItem('access');
-    if (!token) return;
+    /* ---------- save handler ---------- */
+    $('#saveOdFormBtn').on('click', function (e) {
+        e.preventDefault();
+        const token = localStorage.getItem('access');
+        if (!token) return;
 
-    const form    = document.getElementById('odformForm');
-    const payload = Object.fromEntries(new FormData(form));
+        const form = document.getElementById('odformForm');
+        const formData = new FormData(form);
+        ['size_minimum', 'size_maximum', 'budget_minimum', 'budget_maximum']
+            .forEach(k => formData.has(k) && formData.set(k, parseFloat(formData.get(k)||0)));
+        const payload = Object.fromEntries(new FormData(form));
 
-    fetch('/api/odforms/', {
-      method : 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify(payload)
-    })
-    .then(r => r.json().then(j => [r.status, j]))
-    .then(([status, data]) => {                 /* ← parentheses fixed */
-      if (status >= 200 && status < 300) {
-        bootstrap.Modal
-          .getInstance(document.getElementById('exampleModalScrollable'))
-          .hide();
-        form.reset();
-        dt.ajax.reload(null, false);            // keep current page
-        toast('OD-Form created');
-      } else {
-        alert('Error: ' + (data.detail || JSON.stringify(data)));
-      }
-    })
-    .catch(err => alert('Network error: ' + err));
-  });
+        fetch('/api/odforms/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(payload)
+        })
+            .then(r => r.json().then(j => [r.status, j]))
+            .then(([status, data]) => {                 /* ← parentheses fixed */
+                if (status >= 200 && status < 300) {
+                    bootstrap.Modal
+                        .getInstance(document.getElementById('exampleModalScrollable'))
+                        .hide();
+                    form.reset();
+                    dt.ajax.reload(null, false);            // keep current page
+                    toast('OD-Form created');
+                } else {
+                    alert('Error: ' + (data.detail || JSON.stringify(data)));
+                }
+            })
+            .catch(err => alert('Network error: ' + err));
+    });
 </script>
 </body>
 </html>
