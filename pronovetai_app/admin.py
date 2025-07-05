@@ -8,6 +8,18 @@ from .models import (User, UserType, Company,
                      Address, Contact)
 
 
+def user_type_help():
+    """
+    "1 – Administrator
+     2 – Broker
+     3 – Analyst
+     …"
+    """
+    return "\n".join(
+        f"{ut.pk} – {ut.description}" for ut in UserType.objects.all()
+    ) or "Create some UserType rows first!"
+
+
 class CustomUserCreationForm(forms.ModelForm):
     """
     A form for creating new users.  We include the usual
@@ -21,7 +33,7 @@ class CustomUserCreationForm(forms.ModelForm):
     is_active = forms.BooleanField(label="Active", required=False, initial=True)
     is_staff = forms.BooleanField(label="Staff status", required=False, initial=False)
 
-    class Meta:
+    class Meta(UserCreationForm.Meta):
         model = User
         fields = (
             "username", "email",
@@ -29,6 +41,11 @@ class CustomUserCreationForm(forms.ModelForm):
             "user_type",
             "is_staff", "is_superuser", "is_active",
         )
+
+    user_type = forms.CharField(
+        label='User type (id •or• description)',
+        help_text=user_type_help,
+    )
 
     def clean_password2(self):
         p1 = self.cleaned_data.get("password1")
@@ -57,7 +74,7 @@ class CustomUserChangeForm(forms.ModelForm):
     is_staff = forms.BooleanField(label="Staff status", required=False)
 
     class Meta(UserChangeForm.Meta):
-        model  = User
+        model = User
         fields = (
             "username", "email",
             "first_name", "last_name",

@@ -86,7 +86,7 @@ class CustomUserManager(BaseUserManager):
                 raise ValueError(f'UserType id={val} does not exist')
 
         if isinstance(val, str):
-            obj = UserType.objects.filter(description__isexact=val).first()
+            obj = UserType.objects.filter(description__iexact=val).first()
             if obj:
                 extra['user_type'] = obj
                 return
@@ -99,21 +99,30 @@ class CustomUserManager(BaseUserManager):
                 'Please create at least one UserType row '
                 'or pass a valid user_type during createsuperuser.'
             )
-    def create_user(self, username, password=None, created_by=None, **extra_fields):
+
+    def create_user(self, username, password=None, created_by=None, **extra):
         if not username:
             raise ValueError("Username must be set")
-        extra_fields.setdefault('date_joined', timezone.now())
+
+        self._require_user_type(extra)
+
+        extra.setdefault('date_joined', timezone.now())
+
         user = self.model(
             username=username,
             created_by=created_by,
-            **extra_fields)
+            **extra)
         user.set_password(password)
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, username, password, **extra_fields):
-        extra_fields.setdefault('is_staff', True)
-        return self.create_user(username, password, **extra_fields)
+    def create_superuser(self, username, password, **extra):
+        extra.setdefault('is_staff', True)
+        extra.setdefault('is_superuser', True)
+
+        self._require_user_type(extra)
+
+        return self.create_user(username, password, **extra)
 
 
 class User(AbstractBaseUser, PermissionsMixin):
@@ -131,7 +140,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     edited_by = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True,
                                   db_column='edited_user_id', related_name='users_edited')
     edited_date = MyDateTimeField(db_column='edited_date', auto_now=True)
-    user_type = models.ForeignKey(UserType, on_delete=models.SET_NULL, null=True,
+    user_type = models.ForeignKey(UserType, verbose_name='User type (ID or label)',
+                                  on_delete=models.SET_NULL, null=True,
                                   db_column='user_type_id', related_name='users')
     is_active = models.BooleanField(default=True, db_column='is_active')
     is_staff = models.BooleanField(default=False, db_column='is_staff')
@@ -158,13 +168,14 @@ class CustomerUserManager(BaseUserManager):
             raise ValueError('No UserType rows exist - create one or pass user_type')
         extra['user_type'] = default
 
-    def create_user(self, username, password=None, **extra):
+    def create_user(self, username, password=None, created_by=None, **extra):
         if not username:
             raise ValueError('Username must be set')
         self._require_user_type(extra)
 
-        extra.setdefault('is_active', True)
-        user = self.model(username=username, **extra)
+        extra.setdefault('date__joined', timezone.now())
+
+        user = self.model(username=username, created_by=created_by, **extra)
         user.set_password(password)
         user.save(using=self._db)
         return user
@@ -172,6 +183,8 @@ class CustomerUserManager(BaseUserManager):
     def create_superuser(self, username, password, **extra):
         extra.setdefault('is_staff', True)
         extra.setdefault('is_superuser', True)
+
+        self._require_user_type(extra)
 
         if not extra['is_staff'] or not extra['is_superuser']:
             raise ValueError('Super-user requires is_staff=True and is_superuser=True')
