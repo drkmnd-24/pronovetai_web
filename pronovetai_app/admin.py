@@ -1,8 +1,11 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django import forms
 
-from .models import User, UserType, Company, Building, Unit, ODForm, Address, Contact
+from .models import (User, UserType, Company,
+                     Building, Unit, ODForm,
+                     Address, Contact)
 
 
 class CustomUserCreationForm(forms.ModelForm):
@@ -20,8 +23,12 @@ class CustomUserCreationForm(forms.ModelForm):
 
     class Meta:
         model = User
-        # just the actual model columns
-        fields = ("username", "email", "first_name", "last_name", "user_type")
+        fields = (
+            "username", "email",
+            "first_name", "last_name",
+            "user_type",
+            "is_staff", "is_superuser", "is_active",
+        )
 
     def clean_password2(self):
         p1 = self.cleaned_data.get("password1")
@@ -49,9 +56,15 @@ class CustomUserChangeForm(forms.ModelForm):
     is_active = forms.BooleanField(label="Active", required=False)
     is_staff = forms.BooleanField(label="Staff status", required=False)
 
-    class Meta:
-        model = User
-        fields = ("username", "email", "first_name", "last_name", "user_type")
+    class Meta(UserChangeForm.Meta):
+        model  = User
+        fields = (
+            "username", "email",
+            "first_name", "last_name",
+            "user_type",
+            "is_staff", "is_superuser", "is_active",
+            "groups", "user_permissions",
+        )
 
     def save(self, commit=True):
         user = super().save(commit=False)
@@ -62,36 +75,46 @@ class CustomUserChangeForm(forms.ModelForm):
         return user
 
 
+@admin.register(User)
 class CustomUserAdmin(BaseUserAdmin):
     add_form = CustomUserCreationForm
     form = CustomUserChangeForm
     model = User
 
-    list_display = ("username", "email", "first_name", "last_name", "user_type", "is_staff", "is_active")
-    list_filter = ("user_type",)
+    list_display = (
+        "username", "email", "first_name", "last_name",
+        "user_type", "is_staff", "is_superuser", "is_active",
+    )
+    list_filter = ("is_staff", "is_superuser", "is_active", "user_type")
+    search_fields = ("username", "first_name", "last_name", "email")
+    ordering = ("username",)
 
     fieldsets = (
         (None, {"fields": ("username", "password")}),
-        ("Personal info", {"fields": ("email", "first_name", "last_name")}),
-        ("Role & status", {"fields": ("user_type", "is_staff", "is_active")}),
+        ("Personal info", {"fields": ("first_name", "last_name", "email")}),
+        ("Role", {"fields": ("user_type",)}),
+        ("Permissions", {"fields": (
+            "is_active", "is_staff", "is_superuser",
+            "groups", "user_permissions",
+        )}),
+        ("Important dates", {"fields": ("last_login", "date_joined")}),
     )
 
     add_fieldsets = (
         (None, {
             "classes": ("wide",),
             "fields": (
-                "username", "email", "first_name", "last_name", "user_type",
-                "password1", "password2", "is_staff", "is_active"
+                "username", "email",
+                "first_name", "last_name", "user_type",
+                "password1", "password2",
+                "is_staff", "is_superuser", "is_active",
             ),
         }),
     )
 
-    search_fields = ("username", "email", "first_name", "last_name")
-    ordering = ("username",)
-    filter_horizontal = []  # no groups/user_permissions
+    filter_horizontal = ("groups", "user_permissions")
 
 
-admin.site.register(User, CustomUserAdmin)
 admin.site.register(UserType)
 admin.site.register(Company)
 admin.site.register(Building)

@@ -5,6 +5,7 @@ from django.utils import timezone
 from django.conf import settings
 from django.utils.dateparse import parse_datetime
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
+from django.contrib.auth.models import PermissionsMixin
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 
@@ -89,7 +90,7 @@ class CustomUserManager(BaseUserManager):
         return self.create_user(username, password, **extra_fields)
 
 
-class User(AbstractBaseUser):
+class User(AbstractBaseUser, PermissionsMixin):
     id = models.BigAutoField(primary_key=True, db_column='user_id')
     username = models.CharField(max_length=150, unique=True, db_column='user_login')
     password = models.CharField(max_length=128, db_column='user_pass')
@@ -106,13 +107,13 @@ class User(AbstractBaseUser):
     edited_date = MyDateTimeField(db_column='edited_date', auto_now=True)
     user_type = models.ForeignKey(UserType, on_delete=models.SET_NULL, null=True,
                                   db_column='user_type_id', related_name='users')
-    is_active = True
-    is_staff = False
+    is_active = models.BooleanField(default=True, db_column='is_active')
+    is_staff = models.BooleanField(default=False, db_column='is_staff')
 
     objects = CustomUserManager()
 
     USERNAME_FIELD = 'username'
-    REQUIRED_FIELDS = ['email']
+    REQUIRED_FIELDS = ['email', 'user_type']
 
     class Meta:
         db_table = 'pt_users'
@@ -120,6 +121,35 @@ class User(AbstractBaseUser):
 
     def __str__(self):
         return self.username
+
+
+class CustomerUserManager(BaseUserManager):
+    def _require_user_type(self, extra):
+        if extra.get('user_type'):
+            return
+        default = UserType.objects.first()
+        if default is None:
+            raise ValueError('No UserType rows exist - create one or pass user_type')
+        extra['user_type'] = default
+
+    def create_user(self, username, password=None, **extra):
+        if not username:
+            raise ValueError('Username must be set')
+        self._require_user_type(extra)
+
+        extra.setdefault('is_active', True)
+        user = self.model(username=username, **extra)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(self, username, password, **extra):
+        extra.setdefault('is_staff', True)
+        extra.setdefault('is_superuser', True)
+
+        if not extra['is_staff'] or not extra['is_superuser']:
+            raise ValueError('Super-user requires is_staff=True and is_superuser=True')
+        return self.create_user(username, password, **extra)
 
 
 class UserLog(models.Model):

@@ -90,25 +90,25 @@
                 <div class="modal-body">
                     <div class="card-content">
                         <div class="card-body">
-                            <form class="form">
+                            <form id="odformForm" class="form">
                                 <div class="row">
                                     <div class="col-md-6 col-12">
                                         <div class="form-group">
-                                            <label for="first-name-column">Date</label>
+                                            <label class="form-label">Date</label>
                                             <input type="date" id="date_today"
-                                                   class="form-control mb-3 flatpickr-calendar" name="date_today">
+                                                   class="form-control mb-3 flatpickr-calendar" name="created">
                                         </div>
                                     </div>
                                     <div class="col-md-6 col-12">
                                         <div class="form-group">
                                             <label for="first-name-column">Call Taken/Made By</label>
-                                            <input type="text" id="call_taken" class="form-control" name="fname-column">
+                                            <input type="text" class="form-control" name="call_taken_by">
                                         </div>
                                     </div>
                                     <div class="col-md-6 col-12">
                                         <div class="form-group">
                                             <label for="last-name-column">Type of Call</label>
-                                            <select name="call_type" id="call_type" class="form-select">
+                                            <select name="type_of_call" class="form-select">
                                                 <option value="" hidden>Choose...</option>
                                                 <option value="">Inbound</option>
                                                 <option value="">Outbound</option>
@@ -119,88 +119,83 @@
                                         <div class="form-group">
                                             <label for="last-name-column">Source of Call</label>
                                             <select name="source_of_call" id="source_of_call" class="form-select">
-                                                <option value="" hidden>Choose...</option>
-                                                <option value="">News Paper</option>
-                                                <option value="">Old Client</option>
-                                                <option value="">Online Marketing</option>
-                                                <option value="">Referal</option>
-                                                <option value="">Signage</option>
-                                                <option value="">Website</option>
-                                                <option value="">Yellow Pages</option>
-                                                <option value="">Others</option>
+                                                <option hidden value>Choose…</option>
+                                                <option value="newspaper">Newspaper</option>
+                                                <option value="old_client">Old client</option>
+                                                <option value="online_marketing">Online marketing</option>
+                                                <option value="referral">Referral</option>
+                                                <option value="signage">Signage</option>
+                                                <option value="website">Website</option>
+                                                <option value="yellow_pages">Yellow Pages</option>
+                                                <option value="other">Other</option>
                                             </select>
                                         </div>
                                     </div>
                                     <div class="col-md-6 col-12">
                                         <div class="form-group">
                                             <label for="last-name-column">Type of Caller</label>
-                                            <select name="call_type" id="call_type" class="form-select">
-                                                <option value="" hidden>Choose...</option>
-                                                <option value="">Broker</option>
-                                                <option value="">Direct Buyer/Leasee</option>
+                                            <select name="type_of_caller" class="form-select">
+                                                <option hidden value>Choose…</option>
+                                                <option value="broker">Broker</option>
+                                                <option value="direct">Direct buyer / lessee</option>
                                             </select>
                                         </div>
                                     </div>
                                     <div class="col-md-6 col-12">
                                         <div class="form-group">
                                             <label for="last-name-column">Intent</label>
-                                            <select name="call_type" id="call_type" class="form-select">
-                                                <option value="" hidden>Choose...</option>
-                                                <option value="">To Rent</option>
-                                                <option value="">To Buy</option>
-                                                <option value="">Both</option>
+                                            <select name="intent" class="form-select">
+                                                <option hidden value>Choose…</option>
+                                                <option value="lease">Lease</option>
+                                                <option value="sale">Purchase</option>
+                                                <option value="both">Both</option>
                                             </select>
                                         </div>
                                     </div>
                                     <div class="col-md-6 col-12">
                                         <div class="form-group">
-                                            <label for="last-name-column">Size Minimum </label>
-                                            <input type="text" id="size_min" class="form-control" name="size_min"
-                                                   placeholder="per square meter">
+                                            <label class="form-label">Size (min&nbsp;㎡)</label>
+                                            <input type="number" class="form-control" name="size_minimum">
                                         </div>
                                     </div>
                                     <div class="col-md-6 col-12">
                                         <div class="form-group">
-                                            <label for="last-name-column">Size Maximum </label>
-                                            <input type="text" id="size_max" class="form-control" name="size_max"
-                                                   placeholder="per square meter">
+                                            <label for="last-name-column">Size (max&nbsp;㎡) </label>
+                                            <input type="text" class="form-control" name="size_maximum">
                                         </div>
                                     </div>
                                     <div class="col-md-6 col-12">
                                         <div class="form-group">
-                                            <label for="last-name-column">Budget Minimum </label>
-                                            <input type="text" id="size_min" class="form-control" name="size_min"
-                                                   placeholder="PHP">
+                                            <label for="last-name-column">Budget (min ₱) </label>
+                                            <input name="budget_minimum" type="number" class="form-control">
                                         </div>
                                     </div>
                                     <div class="col-md-6 col-12">
                                         <div class="form-group">
-                                            <label for="last-name-column">Budget Maximum </label>
-                                            <input type="text" id="size_max" class="form-control" name="size_max"
-                                                   placeholder="PHP">
+                                            <label class="form-label">Budget (max ₱)</label>
+                                            <input name="budget_maximum" type="number" class="form-control">
                                         </div>
                                     </div>
                                     <div class="col-md-6 col-12">
                                         <div class="form-group">
                                             <label for="last-name-column">Preferred Location </label>
-                                            <input type="text" id="size_max" class="form-control" name="size_max">
+                                            <input type="text" class="form-control" name="preferred_location">
                                         </div>
                                     </div>
                                     <div class="col-md-6 col-12">
                                         <div class="form-floating">
-                            <textarea class="form-control" placeholder="Leave a comment here"
-                                      id="floatingTextarea"></textarea>
                                             <label for="floatingTextarea">Notes</label>
+                                            <textarea name="notes" rows="4" class="form-control"></textarea>
                                         </div>
                                     </div>
                                     <div class="col-md-6 col-12">
                                         <div class="form-group">
                                             <label for="last-name-column">Status</label>
-                                            <select name="call_type" id="call_type" class="form-select">
-                                                <option value="" hidden>Choose...</option>
-                                                <option value="">Active</option>
-                                                <option value="">Inactive</option>
-                                                <option value="">Done Deal</option>
+                                            <select name="status" class="form-select">
+                                                <option hidden value>Choose…</option>
+                                                <option value="active">Active</option>
+                                                <option value="inactive">Inactive</option>
+                                                <option value="done_deal">Done deal</option>
                                             </select>
                                         </div>
                                     </div>
@@ -215,7 +210,7 @@
                         <i class="bx bx-x d-block d-sm-none"></i>
                         <span class="d-none d-sm-block">Close</span>
                     </button>
-                    <button type="button" class="btn btn-primary ms-1" data-bs-dismiss="modal">
+                    <button type="button" id="saveOdFormBtn" class="btn btn-primary ms-1" data-bs-dismiss="modal">
                         <i class="bx bx-check d-block d-sm-none"></i>
                         <span class="d-none d-sm-block">Create OD</span>
                     </button>
@@ -235,68 +230,86 @@
 <script src="{% static 'assets/extensions/datatables.net-bs5/js/dataTables.bootstrap5.min.js' %}"></script>
 
 <script>
-    /* ---------- DataTable ---------- */
-    const $table = $('#odforms-table');
-    let dt;            // will hold the DataTable API instance
+  /* ---------- bootstrap helpers ---------- */
+  const toast = msg => {
+    const el = $(`
+      <div class="toast align-items-center text-bg-success border-0 position-fixed bottom-0 end-0 m-3"
+           role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+          <div class="toast-body">${msg}</div>
+          <button class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+      </div>`).appendTo('body');
+    new bootstrap.Toast(el[0]).show();
+  };                                       /* ← semicolon added */
 
-    $(function () {
-        const token = localStorage.getItem('access');
-        if (!token) {
-            location.href = '/';
-            return;
-        }
+  /* ---------- DataTable ---------- */
+  const $table = $('#odforms-table');
+  let dt;
 
-        dt = $table.DataTable({
-            ajax: {
-                url: '/api/odforms/',
-                headers: {Authorization: `Bearer ${token}`},
-                dataSrc: json => Array.isArray(json) ? json : json.results,
-                error: xhr => alert(`Could not load OD-forms (${xhr.status} ${xhr.statusText})`)
-            },
-            columns: [
-                {data: 'id'},
-                {
-                    data: 'created',
-                    render: v => v ? v.slice(0, 10) : '—',
-                    className: 'whitespace-nowrap'
-                },
-                {data: 'call_taken_by', defaultContent: '—'},
-                {data: 'intent', defaultContent: '—'},
-                {
-                    data: 'status',
-                    render: s => {
-                        const map = {
-                            draft: 'secondary', pending: 'warning',
-                            active: 'primary', done_deal: 'success',
-                            inactive: 'secondary', cancelled: 'danger'
-                        };
-                        const cls = map[s] || 'light';
-                        return `<span class="badge bg-${cls}">${s || '—'}</span>`;
-                    },
-                    className: 'text-center'
-                }
-            ],
-            order: [[1, 'desc']],
-            pageLength: 25,
-            lengthMenu: [25, 50, 100],
-            responsive: true
-        });
+  $(function () {
+    const token = localStorage.getItem('access');
+    if (!token) { location.href = '/'; return; }
+
+    dt = $table.DataTable({
+      ajax: {
+        url: '/api/odforms/',
+        headers: { Authorization: `Bearer ${token}` },
+        dataSrc: json => Array.isArray(json) ? json : json.results,
+        error:  xhr  => alert(`Could not load OD-forms (${xhr.status} ${xhr.statusText})`)
+      },
+      columns: [
+        { data:'id' },
+        { data:'created', render:v=>v ? v.slice(0,10) : '—',
+          className:'whitespace-nowrap' },
+        { data:'call_taken_by', defaultContent:'—' },
+        { data:'intent',        defaultContent:'—' },
+        { data:'status', className:'text-center',
+          render:s=>{
+            const m={draft:'secondary',pending:'warning',active:'primary',
+                     done_deal:'success',inactive:'secondary',cancelled:'danger'};
+            return `<span class="badge bg-${m[s]||'light'}">${s||'—'}</span>`;
+          }}
+      ],
+      order: [[1,'desc']],
+      pageLength: 25,
+      lengthMenu: [25,50,100],
+      responsive: true
     });
+  });
 
-    /* ---------- (placeholder) save handler ---------- */
-    $('#saveOdFormBtn').on('click', function (e) {
-        e.preventDefault();
+  /* ---------- save handler ---------- */
+  $('#saveOdFormBtn').on('click', function (e) {
+    e.preventDefault();
+    const token = localStorage.getItem('access');
+    if (!token) return;
 
-        // TODO: send POST to /api/odforms/
-        // const data = Object.fromEntries(new FormData(document.getElementById('odformForm')));
-        // fetch('/api/odforms/', { method:'POST', headers:{...}, body:JSON.stringify(data) })
+    const form    = document.getElementById('odformForm');
+    const payload = Object.fromEntries(new FormData(form));
 
-        // close the modal
-        bootstrap.Modal.getInstance(document.getElementById('odformModal')).hide();
-
-        // refresh the DataTable
-        dt && dt.ajax.reload(null, false);   // keep current page
-    });
+    fetch('/api/odforms/', {
+      method : 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(payload)
+    })
+    .then(r => r.json().then(j => [r.status, j]))
+    .then(([status, data]) => {                 /* ← parentheses fixed */
+      if (status >= 200 && status < 300) {
+        bootstrap.Modal
+          .getInstance(document.getElementById('exampleModalScrollable'))
+          .hide();
+        form.reset();
+        dt.ajax.reload(null, false);            // keep current page
+        toast('OD-Form created');
+      } else {
+        alert('Error: ' + (data.detail || JSON.stringify(data)));
+      }
+    })
+    .catch(err => alert('Network error: ' + err));
+  });
 </script>
 </body>
 </html>

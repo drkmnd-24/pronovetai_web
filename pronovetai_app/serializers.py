@@ -222,7 +222,7 @@ class UnitSerializer(serializers.ModelSerializer):
 
 
 class ODFormSerializer(serializers.ModelSerializer):
-    ize_minimum = NullableDecimalField(max_digits=10, decimal_places=2, required=False, allow_null=True)
+    size_minimum = NullableDecimalField(max_digits=10, decimal_places=2, required=False, allow_null=True)
     size_maximum = NullableDecimalField(max_digits=10, decimal_places=2, required=False, allow_null=True)
     budget_minimum = NullableDecimalField(max_digits=10, decimal_places=2, required=False, allow_null=True)
     budget_maximum = NullableDecimalField(max_digits=10, decimal_places=2, required=False, allow_null=True)
