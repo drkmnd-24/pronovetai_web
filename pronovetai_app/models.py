@@ -1,5 +1,5 @@
 from django.db import models
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
 from django.conf import settings
@@ -73,6 +73,32 @@ class UserType(models.Model):
 
 
 class CustomUserManager(BaseUserManager):
+    def _require_user_type(self, extra):
+        val = extra.get('user_type')
+        if isinstance(val, UserType):
+            return
+
+        if isinstance(val, (int, str)) and str(val).isdigit():
+            try:
+                extra['user_type'] = UserType.objects.get(pk=int(val))
+                return
+            except ObjectDoesNotExist:
+                raise ValueError(f'UserType id={val} does not exist')
+
+        if isinstance(val, str):
+            obj = UserType.objects.filter(description__isexact=val).first()
+            if obj:
+                extra['user_type'] = obj
+                return
+
+        default = UserType.objects.first()
+        if default:
+            extra['user_type'] = default
+        else:
+            raise ValueError(
+                'Please create at least one UserType row '
+                'or pass a valid user_type during createsuperuser.'
+            )
     def create_user(self, username, password=None, created_by=None, **extra_fields):
         if not username:
             raise ValueError("Username must be set")
