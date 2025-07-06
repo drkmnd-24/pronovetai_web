@@ -121,6 +121,11 @@ class UnitViewSet(viewsets.ModelViewSet):
 class ODFormViewSet(viewsets.ModelViewSet):
     queryset = ODForm.objects.all()
     serializer_class = ODFormSerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        serializer.save(account_manager=self.request.user,
+                        created_by=self.request.user)
 
 
 class BuildingImageViewSet(viewsets.ModelViewSet):
