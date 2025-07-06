@@ -145,6 +145,11 @@ label + p {
   margin-bottom: 12px;
 }
 
+.logo-lg {
+  width: 220px;
+  height: 64px;
+}
+
 .logo-img {
   width: 100%;
   height: auto;

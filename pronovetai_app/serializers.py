@@ -230,8 +230,10 @@ class ODFormSerializer(serializers.ModelSerializer):
     class Meta:
         model = ODForm
         fields = '__all__'
-        read_only_fields = ('account_manager', 'created_by', 'created_date',
-                            'edited_by', 'edited_date')
+        read_only_fields = (
+            'account_manager', 'created_by', 'created_date',
+            'edited_by', 'edited_date',  # ← here
+        )
 
     def validate(self, data):
         ODForm(**data).clean()
