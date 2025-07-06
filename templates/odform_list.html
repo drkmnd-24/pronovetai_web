@@ -247,23 +247,21 @@
 <script src="{% static 'assets/extensions/datatables.net-bs5/js/dataTables.bootstrap5.min.js' %}"></script>
 
 <script>
-    /* ---------- bootstrap helpers ---------- */
+    /* ───────── helpers ─────────────────────────────────────────── */
     const toast = msg => {
         const el = $(`
-      <div class="toast align-items-center text-bg-success border-0 position-fixed bottom-0 end-0 m-3"
-           role="alert" aria-live="assertive" aria-atomic="true">
-        <div class="d-flex">
-          <div class="toast-body">${msg}</div>
-          <button class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-        </div>
-      </div>`).appendTo('body');
+     <div class="toast align-items-center text-bg-success border-0 position-fixed bottom-0 end-0 m-3" role="alert">
+       <div class="d-flex">
+         <div class="toast-body">${msg}</div>
+         <button class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+       </div>
+     </div>`).appendTo('body');
         new bootstrap.Toast(el[0]).show();
-    };                                       /* ← semicolon added */
+    };
 
-    /* ---------- DataTable ---------- */
+    /* ───────── DataTable ───────────────────────────────────────── */
     const $table = $('#odforms-table');
     let dt;
-
     $(function () {
         const token = localStorage.getItem('access');
         if (!token) {
@@ -280,10 +278,7 @@
             },
             columns: [
                 {data: 'id'},
-                {
-                    data: 'created', render: v => v ? v.slice(0, 10) : '—',
-                    className: 'whitespace-nowrap'
-                },
+                {data: 'created', render: v => v ? v.slice(0, 10) : '—', className: 'whitespace-nowrap'},
                 {data: 'call_taken_by', defaultContent: '—'},
                 {data: 'intent', defaultContent: '—'},
                 {
@@ -304,41 +299,55 @@
         });
     });
 
-    /* ---------- save handler ---------- */
-    $('#saveOdFormBtn').on('click', function (e) {
+    /* ───────── create OD form submit ───────────────────────────── */
+    $('#saveOdFormBtn').on('click', async e => {
         e.preventDefault();
         const token = localStorage.getItem('access');
         if (!token) return;
 
         const form = document.getElementById('odformForm');
         const formData = new FormData(form);
-        ['size_minimum', 'size_maximum', 'budget_minimum', 'budget_maximum']
-            .forEach(k => formData.has(k) && formData.set(k, parseFloat(formData.get(k)||0)));
-        const payload = Object.fromEntries(new FormData(form));
 
-        fetch('/api/odforms/', {
+        /* numbers: blank → omit, else float ----------------------- */
+        ['size_minimum', 'size_maximum', 'budget_minimum', 'budget_maximum'].forEach(k => {
+            const v = formData.get(k);
+            if (!v) formData.delete(k); else formData.set(k, parseFloat(v));
+        });
+
+        /* created: blank → now ------------------------------------ */
+        if (!formData.get('created')) {
+            formData.set('created', new Date().toISOString());
+        }
+
+        const payload = Object.fromEntries(formData);
+
+        const res = await fetch('/api/odforms/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify(payload)
-        })
-            .then(r => r.json().then(j => [r.status, j]))
-            .then(([status, data]) => {                 /* ← parentheses fixed */
-                if (status >= 200 && status < 300) {
-                    bootstrap.Modal
-                        .getInstance(document.getElementById('exampleModalScrollable'))
-                        .hide();
-                    form.reset();
-                    dt.ajax.reload(null, false);            // keep current page
-                    toast('OD-Form created');
-                } else {
-                    alert('Error: ' + (data.detail || JSON.stringify(data)));
-                }
-            })
-            .catch(err => alert('Network error: ' + err));
+        });
+
+        let data, raw = await res.text();
+        try {
+            data = JSON.parse(raw);
+        } catch {
+            data = raw;
+        }
+
+        if (res.ok) {
+            bootstrap.Modal.getInstance(
+                document.getElementById('exampleModalScrollable')).hide();
+            form.reset();
+            dt.ajax.reload(null, false);
+            toast('OD-Form created');
+        } else {
+            alert('Error ' + res.status + ': ' + (data.detail || raw.slice(0, 300)));
+        }
     });
 </script>
+
 </body>
 </html>

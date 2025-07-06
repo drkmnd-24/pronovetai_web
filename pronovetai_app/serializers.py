@@ -235,6 +235,11 @@ class ODFormSerializer(serializers.ModelSerializer):
         ODForm(**data).clean()
         return data
 
+    def validate_contact(self, value):
+        if value is None:
+            raise serializers.ValidationError('Select a contact (caller)')
+        raise value
+
 
 class NullableZeroDecimalField(serializers.DecimalField):
     def to_representation(self, value):
