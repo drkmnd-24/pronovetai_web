@@ -124,8 +124,15 @@ class ODFormViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def perform_create(self, serializer):
-        serializer.save(account_manager=self.request.user,
-                        created_by=self.request.user)
+        user = self.request.user
+        serializer.save(
+            account_manager=user,
+            created_by=user,
+            edited_by=user,
+        )
+
+    def perform_update(self, serializer):
+        serializer.save(edited_by=self.request.user)
 
 
 class BuildingImageViewSet(viewsets.ModelViewSet):
