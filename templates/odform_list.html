@@ -251,18 +251,28 @@
 
 <script>
     /* ───────── helpers ─────────────────────────────────────────── */
+    const fmtDatePH = s =>
+        s ? new Date(s).toLocaleDateString('en-PH', {timeZone: 'Asia/Manila'})
+            : '—';
+
+    const fmtDateTimePH = s =>
+        s ? new Date(s).toLocaleString('en-PH',
+                {timeZone: 'Asia/Manila', hour12: false})   // 08/07/2025 23:41:07
+                .replace(',', '')
+            : '—';
+
     const toast = msg => {
         const el = $(`
-     <div class="toast align-items-center text-bg-success border-0 position-fixed bottom-0 end-0 m-3" role="alert">
-       <div class="d-flex">
-         <div class="toast-body">${msg}</div>
-         <button class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-       </div>
-     </div>`).appendTo('body');
+   <div class="toast align-items-center text-bg-success border-0 position-fixed bottom-0 end-0 m-3" role="alert">
+     <div class="d-flex">
+       <div class="toast-body">${msg}</div>
+       <button class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+     </div>
+   </div>`).appendTo('body');
         new bootstrap.Toast(el[0]).show();
     };
 
-    /* swap header + button copy */
+    /* change modal header & button copy */
     function setMode(isEdit) {
         $('#modalTitle').text(isEdit ? 'Edit OD-Form' : 'Create New OD');
         $('#saveBtnText').text(isEdit ? 'Save changes' : 'Create OD');
@@ -277,10 +287,7 @@
 
     /* ---------- init table ---------- */
     $(function () {
-        if (!token) {
-            location.href = '/';
-            return;
-        }
+        if (!token) return location.href = '/';
 
         dt = $table.DataTable({
             ajax: {
@@ -290,42 +297,47 @@
             },
             columns: [
                 {data: 'id', visible: false},
+
+                /* Created On – date only (PH time) */
                 {
-                    data: 'created', render: v => v ? v.replace('T', ' ').slice(0, 16) : '—',
+                    data: 'created',
+                    render: (d, type) => type === 'display' ? fmtDatePH(d) : d,
                     className: 'whitespace-nowrap'
                 },
+
+                /* Edited On – date + time (PH time) */
                 {
-                    data: 'edited_date', render: v => v ? v.replace('T', ' ').slice(0, 16) : '—',
+                    data: 'edited_date',
+                    render: (d, type) => type === 'display' ? fmtDateTimePH(d) : d,
                     className: 'whitespace-nowrap'
                 },
+
                 {data: 'call_taken_by', defaultContent: '—'},
                 {data: 'intent', defaultContent: '—'},
+
                 {
                     data: 'status', className: 'text-center',
                     render: s => {
                         const m = {
-                            draft: 'secondary',
-                            pending: 'warning',
-                            active: 'primary',
-                            done_deal: 'success',
-                            inactive: 'secondary',
-                            cancelled: 'danger'
+                            draft: 'secondary', pending: 'warning', active: 'primary',
+                            done_deal: 'success', inactive: 'secondary', cancelled: 'danger'
                         };
                         return `<span class="badge bg-${m[s] || 'light'}">${s || '—'}</span>`;
                     }
                 },
+
                 {
                     data: null, orderable: false, searchable: false, className: 'text-center',
                     render: (_, __, row) => `
-          <button class="btn btn-sm btn-outline-primary edit-od" title="Edit" data-id="${row.id}">
-            <i class="bi bi-pencil-square"></i>
-          </button>
-          <button class="btn btn-sm btn-outline-danger  delete-od" title="Delete" data-id="${row.id}">
-            <i class="bi bi-trash"></i>
-          </button>`
+        <button class="btn btn-sm btn-outline-primary edit-od" title="Edit" data-id="${row.id}">
+          <i class="bi bi-pencil-square"></i>
+        </button>
+        <button class="btn btn-sm btn-outline-danger  delete-od" title="Delete" data-id="${row.id}">
+          <i class="bi bi-trash"></i>
+        </button>`
                 }
             ],
-            order: [[2, 'desc']],
+            order: [[2, 'desc']],         /* sort by Edited On desc */
             pageLength: 25,
             responsive: true
         });
@@ -351,7 +363,7 @@
             Object.entries(data).forEach(([k, v]) => {
                 const el = $form.elements.namedItem(k);
                 if (!el) return;
-                if (el.type === 'checkbox') el.checked = !!v; else el.value = v ?? '';
+                el.type === 'checkbox' ? el.checked = !!v : el.value = (v ?? '');
             });
             editingId = id;
             setMode(true);
@@ -366,34 +378,34 @@
         const id = this.dataset.id;
         if (!confirm('Delete OD-Form #' + id + ' ?')) return;
         fetch(`/api/odforms/${id}/`, {method: 'DELETE', headers: {Authorization: `Bearer ${token}`}})
-            .then(r => r.ok ? (toast('Deleted'), dt.ajax.reload(null, false)) : r.text().then(t => alert('Error: ' + t)));
+            .then(r => r.ok ? (toast('Deleted'), dt.ajax.reload(null, false))
+                : r.text().then(t => alert('Error: ' + t)));
     });
 
     /* ---------- CREATE / UPDATE ---------- */
     $('#saveOdFormBtn').on('click', async e => {
         e.preventDefault();
-        if (!$form.checkValidity()) {
-            $form.reportValidity();
-            return;
-        }
+        if (!$form.checkValidity()) return $form.reportValidity();
 
         const fd = new FormData($form);
-        ['size_minimum', 'size_maximum', 'budget_minimum', 'budget_maximum'].forEach(k => {
-            if (fd.get(k) === '') fd.delete(k);
-        });
+
+        ['size_minimum', 'size_maximum', 'budget_minimum', 'budget_maximum']
+            .forEach(k => {
+                if (fd.get(k) === '') fd.delete(k);
+            });
+
+        if (editingId) fd.delete('created');              // keep original on edit
         if (!fd.get('created')) fd.set('created', new Date().toISOString());
+
         const payload = Object.fromEntries(fd);
-
-        const opts = {
+        const r = await fetch(editingId ? `/api/odforms/${editingId}/` : '/api/odforms/', {
             method: editingId ? 'PATCH' : 'POST',
-            headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`},
+            headers: {'Content-Type': 'application/json', Authorization: `Bearer ${token}`},
             body: JSON.stringify(payload)
-        };
-        const url = editingId ? `/api/odforms/${editingId}/` : '/api/odforms/';
+        });
 
-        const r = await fetch(url, opts);
         const txt = await r.text();
-        const json = (() => {
+        const data = (() => {
             try {
                 return JSON.parse(txt);
             } catch {
@@ -407,10 +419,11 @@
             dt.ajax.reload(null, false);
             toast(editingId ? 'Updated' : 'Created');
         } else {
-            alert('Error ' + r.status + ': ' + (json.detail || txt.slice(0, 300)));
+            alert('Error ' + r.status + ': ' + (data.detail || txt.slice(0, 300)));
         }
     });
 </script>
+
 
 </body>
 </html>
