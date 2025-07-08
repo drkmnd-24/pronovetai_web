@@ -58,6 +58,7 @@
                                 <tr>
                                     <th>ID</th>
                                     <th>Created&nbsp;On</th>
+                                    <th>Edited&nbsp;On</th>
                                     <th>Call&nbsp;Taken&nbsp;By</th>
                                     <th>Intent</th>
                                     <th>Status</th>
@@ -82,7 +83,7 @@
         <div class="modal-xl modal-dialog modal-dialog-scrollable" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalScrollableTitle">Create New OD</h5>
+                    <h5 class="modal-title" id="modalTitle">Create New OD</h5>
                     <button type="button" class="close" data-bs-dismiss="modal"
                             aria-label="Close">
                         <i data-feather="x"></i>
@@ -203,7 +204,8 @@
                                     <div class="col-md-6 col-12">
                                         <div class="form-group mb-3">
                                             <label id="exampleFormControlTextarea1">Notes</label>
-                                            <textarea name="notes" rows="4" class="form-control" for="exampleFormControlTextarea1" required></textarea>
+                                            <textarea name="notes" rows="4" class="form-control"
+                                                      for="exampleFormControlTextarea1" required></textarea>
                                         </div>
                                     </div>
                                     <div class="col-md-6 col-12">
@@ -230,7 +232,7 @@
                     </button>
                     <button type="button" id="saveOdFormBtn" class="btn btn-primary ms-1" data-bs-dismiss="modal">
                         <i class="bx bx-check d-block d-sm-none"></i>
-                        <span class="d-none d-sm-block">Create OD</span>
+                        <span class="d-none d-sm-block" id="saveBtnText">Create OD</span>
                     </button>
                 </div>
             </div>
@@ -248,57 +250,74 @@
 <script src="{% static 'assets/extensions/datatables.net-bs5/js/dataTables.bootstrap5.min.js' %}"></script>
 
 <script>
-    /* ───────── helpers ─────────────────────────── */
+    /* ───────── helpers ─────────────────────────────────────────── */
     const toast = msg => {
         const el = $(`
-   <div class="toast align-items-center text-bg-success border-0 position-fixed bottom-0 end-0 m-3" role="alert">
-     <div class="d-flex">
-       <div class="toast-body">${msg}</div>
-       <button class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-     </div>
-   </div>`).appendTo('body');
+     <div class="toast align-items-center text-bg-success border-0 position-fixed bottom-0 end-0 m-3" role="alert">
+       <div class="d-flex">
+         <div class="toast-body">${msg}</div>
+         <button class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+       </div>
+     </div>`).appendTo('body');
         new bootstrap.Toast(el[0]).show();
     };
 
-    /* ───────── DataTable ───────────────────────── */
+    /* swap header + button copy */
+    function setMode(isEdit) {
+        $('#modalTitle').text(isEdit ? 'Edit OD-Form' : 'Create New OD');
+        $('#saveBtnText').text(isEdit ? 'Save changes' : 'Create OD');
+    }
+
+    /* ───────── DataTable + CRUD ───────────────────────────────── */
     const $table = $('#odforms-table');
-    let dt, editingId = null;           // ← keep id when in “edit” mode
+    const $modal = $('#exampleModalScrollable');
+    const $form = $('#odformForm')[0];
+    let dt, editingId = null;
     const token = localStorage.getItem('access');
 
-    $(initTable);
-
-    function initTable() {
-        if (!token) return location.href = '/';
+    /* ---------- init table ---------- */
+    $(function () {
+        if (!token) {
+            location.href = '/';
+            return;
+        }
 
         dt = $table.DataTable({
             ajax: {
                 url: '/api/odforms/',
                 headers: {Authorization: `Bearer ${token}`},
-                dataSrc: json => Array.isArray(json) ? json : json.results,
-                error: xhr => alert(`Could not load OD-forms (${xhr.status} ${xhr.statusText})`)
+                dataSrc: j => Array.isArray(j) ? j : j.results
             },
             columns: [
-                {data: 'id'},
-                {data: 'created', render: v => v ? v.slice(0, 10) : '—', className: 'whitespace-nowrap'},
+                {data: 'id', visible: false},
+                {
+                    data: 'created', render: v => v ? v.replace('T', ' ').slice(0, 16) : '—',
+                    className: 'whitespace-nowrap'
+                },
+                {
+                    data: 'edited_date', render: v => v ? v.replace('T', ' ').slice(0, 16) : '—',
+                    className: 'whitespace-nowrap'
+                },
                 {data: 'call_taken_by', defaultContent: '—'},
                 {data: 'intent', defaultContent: '—'},
                 {
                     data: 'status', className: 'text-center',
                     render: s => {
                         const m = {
-                            draft: 'secondary', pending: 'warning', active: 'primary',
-                            done_deal: 'success', inactive: 'secondary', cancelled: 'danger'
+                            draft: 'secondary',
+                            pending: 'warning',
+                            active: 'primary',
+                            done_deal: 'success',
+                            inactive: 'secondary',
+                            cancelled: 'danger'
                         };
                         return `<span class="badge bg-${m[s] || 'light'}">${s || '—'}</span>`;
                     }
                 },
-                { /* Actions column */
-                    data: null,
-                    orderable: false,
-                    searchable: false,
-                    className: 'text-center',
+                {
+                    data: null, orderable: false, searchable: false, className: 'text-center',
                     render: (_, __, row) => `
-          <button class="btn btn-sm btn-outline-primary edit-od"   title="Edit"   data-id="${row.id}">
+          <button class="btn btn-sm btn-outline-primary edit-od" title="Edit" data-id="${row.id}">
             <i class="bi bi-pencil-square"></i>
           </button>
           <button class="btn btn-sm btn-outline-danger  delete-od" title="Delete" data-id="${row.id}">
@@ -306,60 +325,51 @@
           </button>`
                 }
             ],
-            order: [[1, 'desc']],
+            order: [[2, 'desc']],
             pageLength: 25,
-            lengthMenu: [25, 50, 100],
             responsive: true
         });
-    }
+    });
 
-    /* ───────── set / reset form helpers ───────── */
-    const $modal = $('#exampleModalScrollable');
-    const $form = $('#odformForm')[0];
-
+    /* ---------- helpers ---------- */
     function resetForm() {
         $form.reset();
         editingId = null;
+        setMode(false);
     }
 
-    /* ───────── add / edit (open modal) ───────── */
+    /* ---------- ADD ---------- */
+    $('[data-bs-target="#exampleModalScrollable"]').on('click', resetForm);
+
+    /* ---------- EDIT ---------- */
     $table.on('click', '.edit-od', async function () {
         const id = this.dataset.id;
         try {
             const r = await fetch(`/api/odforms/${id}/`, {headers: {Authorization: `Bearer ${token}`}});
             if (!r.ok) throw await r.text();
             const data = await r.json();
-            // fill form —— keys must match input[name]
             Object.entries(data).forEach(([k, v]) => {
                 const el = $form.elements.namedItem(k);
                 if (!el) return;
-                if (el.type === 'checkbox') el.checked = !!v;
-                else el.value = v ?? '';
+                if (el.type === 'checkbox') el.checked = !!v; else el.value = v ?? '';
             });
             editingId = id;
+            setMode(true);
             new bootstrap.Modal($modal[0]).show();
         } catch (err) {
             alert('Could not load record: ' + err);
         }
     });
 
-    /* ───────── delete ───────── */
+    /* ---------- DELETE ---------- */
     $table.on('click', '.delete-od', function () {
         const id = this.dataset.id;
         if (!confirm('Delete OD-Form #' + id + ' ?')) return;
-        fetch(`/api/odforms/${id}/`, {
-            method: 'DELETE',
-            headers: {Authorization: `Bearer ${token}`}
-        })
-            .then(r => {
-                if (r.ok) {
-                    toast('Deleted');
-                    dt.ajax.reload(null, false);
-                } else r.text().then(t => alert('Error: ' + t));
-            });
+        fetch(`/api/odforms/${id}/`, {method: 'DELETE', headers: {Authorization: `Bearer ${token}`}})
+            .then(r => r.ok ? (toast('Deleted'), dt.ajax.reload(null, false)) : r.text().then(t => alert('Error: ' + t)));
     });
 
-    /* ───────── save (create OR edit) ───────── */
+    /* ---------- CREATE / UPDATE ---------- */
     $('#saveOdFormBtn').on('click', async e => {
         e.preventDefault();
         if (!$form.checkValidity()) {
@@ -368,33 +378,28 @@
         }
 
         const fd = new FormData($form);
-        ['size_minimum', 'size_maximum', 'budget_minimum', 'budget_maximum']
-            .forEach(k => {
-                if (fd.get(k) === '') fd.delete(k);
-            });
-
+        ['size_minimum', 'size_maximum', 'budget_minimum', 'budget_maximum'].forEach(k => {
+            if (fd.get(k) === '') fd.delete(k);
+        });
         if (!fd.get('created')) fd.set('created', new Date().toISOString());
-
         const payload = Object.fromEntries(fd);
 
         const opts = {
             method: editingId ? 'PATCH' : 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
+            headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`},
             body: JSON.stringify(payload)
         };
         const url = editingId ? `/api/odforms/${editingId}/` : '/api/odforms/';
 
         const r = await fetch(url, opts);
         const txt = await r.text();
-        let data;
-        try {
-            data = JSON.parse(txt);
-        } catch {
-            data = txt;
-        }
+        const json = (() => {
+            try {
+                return JSON.parse(txt);
+            } catch {
+                return txt;
+            }
+        })();
 
         if (r.ok) {
             bootstrap.Modal.getInstance($modal[0]).hide();
@@ -402,12 +407,9 @@
             dt.ajax.reload(null, false);
             toast(editingId ? 'Updated' : 'Created');
         } else {
-            alert('Error ' + r.status + ': ' + (data.detail || JSON.stringify(data).slice(0, 300)));
+            alert('Error ' + r.status + ': ' + (json.detail || txt.slice(0, 300)));
         }
     });
-
-    /* ───────── clear form when opening in “add” mode ───────── */
-    $('[data-bs-target="#exampleModalScrollable"]').on('click', resetForm);
 </script>
 
 </body>
