@@ -35,14 +35,14 @@
             <div class="page-title">
                 <div class="row">
                     <div class="col-12 col-md-6 order-md-1 order-last">
-                        <h3>Building List</h3>
+                        <h3>Contact List</h3>
                         <p class="text-subtitle text-muted">Interactive Datatable for Contact List</p>
                     </div>
                     <div class="col-12 col-md-6 order-md-2 order-first">
                         <nav aria-label="breadcrumb" class="breadcrumb-header float-start float-lg-end">
                             <ol class="breadcrumb">
                                 <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
-                                <li aria-current="page" class="breadcrumb-item active">Building List</li>
+                                <li aria-current="page" class="breadcrumb-item active">Contact List</li>
                             </ol>
                         </nav>
                     </div>
@@ -53,14 +53,13 @@
                 <div class="card">
                     <div class="card-body">
                         <div class="table-responsive">
-                            <table class="table table-striped" id="buildings-table">
+                            <table class="table table-striped" id="contacts-table">
                                 <thead>
                                 <tr>
-                                    <th>Building Name</th>
-                                    <th>Grade</th>
-                                    <th>PEZA</th>
-                                    <th>Strata</th>
-                                    <th>City</th>
+                                    <th>Contact Name</th>
+                                    <th>Company Name</th>
+                                    <th>Phone Number</th>
+                                    <th>Mobile Number</th>
                                 </tr>
                                 </thead>
                                 <tbody></tbody>
@@ -75,6 +74,107 @@
         {% include '_footer.html' %}
     </div>
 </div>
+
+<!-- ───────────── scrollable modal ───────────── -->
+<div class="col-md-6 col-12">
+    <div class="modal fade" id="exampleModalScrollable" tabindex="-1" role="dialog"
+         aria-labelledby="exampleModalScrollableTitle" aria-hidden="true">
+        <div class="modal-xl modal-dialog modal-dialog-scrollable" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">Create New Contacts</h5>
+                    <button type="button" class="close" data-bs-dismiss="modal"
+                            aria-label="Close">
+                        <i data-feather="x"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="card-content">
+                        <div class="card-body">
+                            <form id="contactForm" class="form">
+                                <div class="row">
+                                    <div class="col-md-6 col-12">
+                                        <div class="form-group">
+                                            <label for="company-column">Company</label>
+                                            <input type="text" class="form-control" name="company_list" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 col-12">
+                                        <div class="form-group">
+                                            <label for="title-column">Title</label>
+                                            <input type="text" class="form-control" name="contact_title" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 col-12">
+                                        <div class="form-group">
+                                            <label for="first-name-column">First Name</label>
+                                            <input type="text" class="form-control" name="first_name" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 col-12">
+                                        <div class="form-group">
+                                            <label for="last-name-column">Last Name</label>
+                                            <input type="text" class="form-control" name="last_name" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 col-12">
+                                        <div class="form-group">
+                                            <label for="email-address-column">Email Address</label>
+                                            <input type="text" class="form-control" name="email_address" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 col-12">
+                                        <div class="form-group">
+                                            <label for="last-name-column">Position</label>
+                                            <input type="text" class="form-control" name="contact_title" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 col-12">
+                                        <div class="form-group">
+                                            <label for="last-name-column">Landline</label>
+                                            <input type="text" class="form-control" name="landline" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 col-12">
+                                        <div class="form-group">
+                                            <label for="last-name-column">Mobile Number</label>
+                                            <input type="text" class="form-control" name="mobile_number" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 col-12">
+                                        <div class="form-group">
+                                            <label for="last-name-column">Fax Number</label>
+                                            <input type="text" class="form-control" name="fax_number" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 col-12">
+                                        <div class="form-group mb-3">
+                                            <label id="exampleFormControlTextarea1">Notes</label>
+                                            <textarea name="notes" rows="4" class="form-control"
+                                                      for="exampleFormControlTextarea1" required></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light-secondary"
+                            data-bs-dismiss="modal">
+                        <i class="bx bx-x d-block d-sm-none"></i>
+                        <span class="d-none d-sm-block">Close</span>
+                    </button>
+                    <button type="button" id="saveOdFormBtn" class="btn btn-primary ms-1" data-bs-dismiss="modal">
+                        <i class="bx bx-check d-block d-sm-none"></i>
+                        <span class="d-none d-sm-block" id="saveBtnText">Create New Contact</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="{% static '/assets/static/js/components/dark.js' %}"></script>
 <script src="{% static '/assets/extensions/perfect-scrollbar/perfect-scrollbar.min.js' %}"></script>
 
@@ -86,6 +186,8 @@
 <script src="{% static '/assets/extensions/datatables.net/js/jquery.dataTables.min.js' %}"></script>
 <script src="{% static '/assets/extensions/datatables.net-bs5/js/dataTables.bootstrap5.min.js' %}"></script>
 <script src="{% static '/assets/static/js/pages/datatables.js' %}"></script>
+
+<script src="{% static 'js_function/contact_list.js' %}"></script>
 
 </body>
 
