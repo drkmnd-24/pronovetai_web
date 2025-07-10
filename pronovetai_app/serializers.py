@@ -149,14 +149,20 @@ class CompanySerializer(serializers.ModelSerializer):
 class ContactSerializer(serializers.ModelSerializer):
     full_name = serializers.ReadOnlyField()
     company_name = serializers.CharField(source='company.name', read_only=True)
-    contact_type = serializers.SerializerMethodField()
+
+    company = serializers.PrimaryKeyRelatedField(
+        queryset=Company.objects.all(),
+        required=False,
+        allow_null=True
+    )
 
     class Meta:
         model = Contact
         fields = [
-            'id', 'full_name', 'title', 'position',
-            'email', 'phone_number', 'mobile_number', 'fax_number',
-            'company_name', 'contact_type',
+            'id', 'company', 'company_name', 'title',
+            'first_name', 'last_name', 'position', 'email',
+            'phone_number', 'mobile_number', 'fax_number',
+            'notes',
         ]
 
     def get_contact_type(self, obj):
