@@ -45,4 +45,5 @@ urlpatterns = [
     path('unitlist/', TemplateView.as_view(template_name='unit_list.html'), name='unit_list'),
     path('companylist/', TemplateView.as_view(template_name='company_list.html'), name='company_list'),
     path('odformlist/', TemplateView.as_view(template_name='odform_list.html'), name='odform_list'),
+    path('contactlist/', TemplateView.as_view(template_name='contact_list.html'), name='contact_list'),
 ]
