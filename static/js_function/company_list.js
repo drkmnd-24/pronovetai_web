@@ -43,12 +43,14 @@ $(function () {
             {                        // actions
                 data: null, orderable: false, searchable: false, className: 'text-center',
                 render: (_, __, row) => `
-          <button class="btn btn-sm btn-outline-primary edit-company"  data-id="${row.id}" title="Edit">
-            <i class="bi bi-pencil-square"></i>
-          </button>
-          <button class="btn btn-sm btn-outline-danger  delete-company" data-id="${row.id}" title="Delete">
-            <i class="bi bi-trash"></i>
-          </button>`
+                <div class="d-flex justify-content-center gap-1">
+                    <button class="btn btn-sm btn-outline-primary edit-company"  data-id="${row.id}" title="Edit">
+                        <i class="bi bi-pencil-square"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger  delete-company" data-id="${row.id}" title="Delete">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>`
             }
         ],
         order: [[1, 'asc']],     // sort by Company Name

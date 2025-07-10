@@ -97,9 +97,10 @@ class CompanyViewSet(viewsets.ModelViewSet):
     serializer_class = CompanySerializer
 
 
-class ContactViewSet(ReadOnlyModelViewSet):
+class ContactViewSet(viewsets.ModelViewSet):
     queryset = Contact.objects.select_related('company')
     serializer_class = ContactSerializer
+    permission_classes = [IsAuthenticated]
 
 
 class BuildingViewSet(viewsets.ModelViewSet):
