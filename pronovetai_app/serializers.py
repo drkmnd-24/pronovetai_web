@@ -159,11 +159,11 @@ class ContactSerializer(serializers.ModelSerializer):
     class Meta:
         model = Contact
         fields = [
-            'id', 'company', 'company_name', 'title',
-            'first_name', 'last_name', 'position', 'email',
-            'phone_number', 'mobile_number', 'fax_number',
-            'notes',
+            'id', 'title', 'first_name', 'last_name', 'full_name',
+            'position', 'email', 'phone_number', 'mobile_number',
+            'fax_number', 'notes', 'company', 'company_name',
         ]
+        read_only_fields = ['full_name', 'company_name']
 
     def get_contact_type(self, obj):
         # nothing in the table yet – leave the column blank
