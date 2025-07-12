@@ -1,33 +1,53 @@
 /* ───────── toast helper ─────────────────────────── */
 const toast = msg => {
-    const el = $(`
-    <div class="toast align-items-center text-bg-success border-0 position-fixed bottom-0 end-0 m-3" role="alert">
-      <div class="d-flex">
-        <div class="toast-body">${msg}</div>
-        <button class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-      </div>
-    </div>`).appendTo('body');
-    new bootstrap.Toast(el[0]).show();
+    const $el = $(`
+   <div class="toast align-items-center text-bg-success border-0 position-fixed bottom-0 end-0 m-3" role="alert">
+     <div class="d-flex">
+       <div class="toast-body">${msg}</div>
+       <button class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+     </div>
+   </div>`).appendTo('body');
+    new bootstrap.Toast($el[0]).show();
 };
 
 /* swap modal copy between Create / Edit */
-function setMode(isEdit) {
-    $('#modalTitle').text(isEdit ? 'Edit Contact' : 'Create New Contact');
-    $('#saveBtnText').text(isEdit ? 'Save changes' : 'Create Contact');
+function setMode(edit) {
+    $('#modalTitle').text(edit ? 'Edit Contact' : 'Create New Contact');
+    $('#saveBtnText').text(edit ? 'Save changes' : 'Create Contact');
 }
 
 /* ─────────── DOM shortcuts ───────────────────────── */
 const $table = $('#contacts-table');
 const $modal = $('#exampleModalScrollable');
 const $form = $('#contactForm')[0];
-const $companyVis = $('#companyDisplay');   // read-only visible text
-const $companyHid = $('#companyId');        // hidden <input name="company">
+
+const $companyDisplay = $('#companyDisplay');  // read-only visible text
+const $companyId = $('#companyId');       // hidden <input name="company">
+
+const $switchExists = $('#companyExists');
+const $areaPick = $('#companyPickArea');
+const $inputFreeText = $('#companyFreeText');
+
+/* toggle widgets when the switch changes */
+function toggleCompanyInputs() {
+    const exist = $switchExists.prop('checked');
+    $areaPick.toggle(exist);
+    $inputFreeText.toggle(!exist);
+    if (exist) {
+        $inputFreeText.val('');
+    } else {
+        $companyDisplay.val('');
+        $companyId.val('');
+    }
+}
+
+$switchExists.on('change', toggleCompanyInputs);
 
 let dt, editingId = null;
 const token = localStorage.getItem('access');
 
 /* ========== initialise DataTable ================== */
-$(function () {
+$(async function () {
     if (!token) return (location.href = '/');
 
     dt = $table.DataTable({
@@ -44,16 +64,16 @@ $(function () {
             {
                 data: null, orderable: false, searchable: false, className: 'text-center',
                 render: (_, __, row) => `
-          <div class="d-flex justify-content-center gap-1">
-            <button class="btn btn-sm btn-outline-primary edit-contact"
-                    data-id="${row.id}" title="Edit">
-                <i class="bi bi-pencil-square"></i>
-            </button>
-            <button class="btn btn-sm btn-outline-danger delete-contact"
-                    data-id="${row.id}" title="Delete">
-                <i class="bi bi-trash"></i>
-            </button>
-          </div>`
+           <div class="d-flex justify-content-center gap-1">
+             <button class="btn btn-sm btn-outline-primary edit-contact"
+                     data-id="${row.id}" title="Edit">
+                 <i class="bi bi-pencil-square"></i>
+             </button>
+             <button class="btn btn-sm btn-outline-danger delete-contact"
+                     data-id="${row.id}" title="Delete">
+                 <i class="bi bi-trash"></i>
+             </button>
+           </div>`
             }
         ],
         order: [[0, 'asc']],
@@ -65,8 +85,11 @@ $(function () {
 /* ========== helpers ================================= */
 function resetForm() {
     $form.reset();
-    $companyVis.val('');
-    $companyHid.val('');
+    $companyDisplay.val('');
+    $companyId.val('');
+    $inputFreeText.val('');
+    $switchExists.prop('checked', true);
+    toggleCompanyInputs();
     editingId = null;
     setMode(false);
 }
@@ -76,7 +99,6 @@ $('[data-bs-target="#exampleModalScrollable"]').on('click', resetForm);
 
 /* ─────── company search modal ------------------------ */
 $('#btnCompanySearch').on('click', () => $('#companySearchModal').modal('show'));
-
 $('#companySearchInput').on('keyup', doCompanySearch);
 $('#companySearchBtn').on('click', doCompanySearch);
 
@@ -103,92 +125,122 @@ async function doCompanySearch() {
 }
 
 function selectCompany(c) {
-    $companyVis.val(c.name);
-    $companyHid.val(c.id);      // this value will be submitted
+    $companyDisplay.val(c.name);
+    $companyId.val(c.id);
     $('#companySearchModal').modal('hide');
 }
 
 $('#btnClearCompany').on('click', () => {
-    $companyVis.val('');
-    $companyHid.val('');
+    $companyDisplay.val('');
+    $companyId.val('');
 });
 
 /* ------------ EDIT -------------------------------- */
 $table.on('click', '.edit-contact', async function () {
-  const id = this.dataset.id;
-  try {
-    const r = await fetch(`/api/contacts/${id}/`,
-        { headers:{ Authorization:`Bearer ${token}` }});
-    if (!r.ok) throw await r.text();
-    const data = await r.json();
+    const id = this.dataset.id;
+    try {
+        const r = await fetch(`/api/contacts/${id}/`,
+            {headers: {Authorization: `Bearer ${token}`}});
+        if (!r.ok) throw await r.text();
+        const data = await r.json();
 
-    /* populate ordinary inputs */
-    Object.entries(data).forEach(([k,v])=>{
-      const el = $form.elements.namedItem(k);
-      if (el) el.value = v ?? '';
-    });
+        Object.entries(data).forEach(([k, v]) => {
+            const el = $form.elements.namedItem(k);
+            if (el) el.value = v ?? '';
+        });
 
-    /* fill company selector */
-    if (data.company) {
-      $companyVis.val(data.company_name);
-      $companyHid.val(data.company);
-    } else {
-      $companyVis.val('');
-      $companyHid.val('');
+        if (data.company) {
+            $companyDisplay.val(data.company_name);
+            $companyId.val(data.company);
+            $switchExists.prop('checked', true);
+        } else {
+            $companyDisplay.val('');
+            $companyId.val('');
+            $switchExists.prop('checked', false);
+        }
+        toggleCompanyInputs();
+
+        editingId = id;
+        setMode(true);
+        new bootstrap.Modal($modal[0]).show();
+    } catch (err) {
+        alert('Could not load record: ' + err);
     }
-
-    editingId = id;
-    setMode(true);
-    new bootstrap.Modal($modal[0]).show();
-  } catch (err) {
-    alert('Could not load record: ' + err);
-  }
 });
 
 /* ------------ DELETE ------------------------------ */
 $table.on('click', '.delete-contact', function () {
-  const id = this.dataset.id;
-  if (!confirm(`Delete contact #${id}?`)) return;
-
-  fetch(`/api/contacts/${id}/`, {
-    method :'DELETE',
-    headers:{ Authorization:`Bearer ${token}` }
-  }).then(r=> r.ok
-      ? (toast('Deleted'), dt.ajax.reload(null,false))
-      : r.text().then(t=>alert('Error: '+t)));
+    const id = this.dataset.id;
+    if (!confirm(`Delete contact #${id}?`)) return;
+    fetch(`/api/contacts/${id}/`, {
+        method: 'DELETE',
+        headers: {Authorization: `Bearer ${token}`}
+    }).then(r => r.ok
+        ? (toast('Deleted'), dt.ajax.reload(null, false))
+        : r.text().then(t => alert('Error: ' + t)));
 });
 
 /* ------------ CREATE / UPDATE --------------------- */
-$('#saveOdFormBtn').on('click', async e=>{
-  e.preventDefault();
-  if(!$form.checkValidity()){ $form.reportValidity(); return; }
+$('#saveOdFormBtn').on('click', async e => {
+    e.preventDefault();
+    if (!$form.checkValidity()) {
+        $form.reportValidity();
+        return;
+    }
 
-  const fd = new FormData($form);
-  /* inject (nullable) company id */
-  const companyVal = $companyHid.val().trim();
-  fd.set('company', companyVal ? parseInt(companyVal, 10) : null);
+    /* resolve company */
+    let companyId = $companyId.val().trim();
+    if (!$switchExists.prop('checked')) {            // “NO” branch
+        const freeTxt = $inputFreeText.val().trim();
+        if (freeTxt) {
+            const create = await fetch('/api/companies/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify({name: freeTxt})
+            });
+            if (!create.ok) {
+                alert('Cannot create company');
+                return;
+            }
+            companyId = (await create.json()).id;
+        } else {
+            companyId = null;
+        }
+    }
 
-  const payload = Object.fromEntries(fd.entries());
+    /* build payload */
+    const fd = new FormData($form);
+    fd.set('company', companyId ? parseInt(companyId, 10) : null);
+    const payload = Object.fromEntries(fd.entries());
 
-  const url  = editingId ? `/api/contacts/${editingId}/` : '/api/contacts/';
-  const opts = {
-    method : editingId ? 'PATCH' : 'POST',
-    headers: { 'Content-Type':'application/json',
-               Authorization:`Bearer ${token}` },
-    body   : JSON.stringify(payload)
-  };
+    const url = editingId ? `/api/contacts/${editingId}/` : '/api/contacts/';
+    const opts = {
+        method: editingId ? 'PATCH' : 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+    };
 
-  const r   = await fetch(url, opts);
-  const txt = await r.text();
-  const data = (()=>{ try{return JSON.parse(txt);}catch{return txt;} })();
+    const r = await fetch(url, opts);
+    const txt = await r.text();
+    let data;
+    try {
+        data = JSON.parse(txt);
+    } catch {
+        data = txt;
+    }
 
-  if (r.ok) {
-    bootstrap.Modal.getInstance($modal[0]).hide();
-    resetForm();
-    dt.ajax.reload(null,false);
-    toast(editingId ? 'Updated' : 'Created');
-  } else {
-    alert('Error '+r.status+': '+(data.detail || txt.slice(0,300)));
-  }
+    if (r.ok) {
+        bootstrap.Modal.getInstance($modal[0]).hide();
+        resetForm();
+        dt.ajax.reload(null, false);
+        toast(editingId ? 'Updated' : 'Created');
+    } else {
+        alert('Error ' + r.status + ': ' + (data.detail || txt.slice(0, 300)));
+    }
 });
-
