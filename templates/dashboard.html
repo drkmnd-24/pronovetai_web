@@ -70,16 +70,15 @@
                             <a href="#" data-bs-toggle="dropdown" aria-expanded="false">
                                 <div class="user-menu d-flex">
                                     <div class="user-name text-end me-3">
-                                        <h6 id="navbar-fullname" class="mb-0 text-gray-600">...</h6>
-<!--                                        <p class="mb-0 text-sm text-gray-600">Administrator</p>-->
+                                        <h6 id="navbar-fullname" class="mb-0 text-gray-600">…</h6>
                                     </div>
                                     <div class="user-img d-flex align-items-center">
                                         <div class="avatar avatar-md">
                                             <img src="{% static '/assets/compiled/jpg/1.jpg' %}">
                                         </div>
                                         <div class="ms-3 name">
-                                            <h5 id="card-fullname" class="font-bold">...</h5>
-                                            <h5 id="card-username" class="text-muted mb-0">@...</h5>
+                                            <h5 id="card-fullname" class="font-bold">…</h5>
+                                            <h6 id="card-username" class="text-muted mb-0">@…</h6>
                                         </div>
                                     </div>
                                 </div>
@@ -87,7 +86,7 @@
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton"
                                 style="min-width: 11rem;">
                                 <li>
-                                    <h6 class="dropdown-header">Hello!</h6>
+                                <li><h6 id="dropdown-greeting" class="dropdown-header">Hello!</h6></li>
                                 </li>
                                 <li><a class="dropdown-item" href="#"><i class="icon-mid bi bi-person me-2"></i> My
                                     Profile</a></li>
@@ -389,31 +388,7 @@
 <script src="{% static '/assets/extensions/apexcharts/apexcharts.min.js' %}"></script>
 <script src="{% static '/assets/static/js/pages/dashboard.js' %}"></script>
 
-<script>
-    (function () {
-        const token = localStorage.getItem("access");
-        if (!token) return window.location.href = "/";
-
-        fetch("/api/dashboard/", {
-            headers: {"Authorization": `Bearer ${token}`}
-        })
-            .then(r => {
-                if (r.status === 401) {
-                    localStorage.clear();
-                    return window.location.href = "/";
-                }
-                return r.json();
-            })
-            .then(data => {
-                if (!data) return;
-                document.getElementById("stat-buildings").textContent = data.buildings ?? 0;
-                document.getElementById("stat-units").textContent = data.units ?? 0;
-                document.getElementById("stat-odforms").textContent = data.odforms ?? 0;
-                document.getElementById("stat-users").textContent = data.users ?? 0;
-            })
-            .catch(console.error);
-    })();
-</script>
+<script src="{% static 'js_function/dashboard.js' %}"></script>
 </body>
 
 </html>
