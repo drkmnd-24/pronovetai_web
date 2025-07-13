@@ -143,11 +143,11 @@ class CompanySerializer(serializers.ModelSerializer):
         model = Company
         fields = [
             'id', 'name', 'industry',
-            'address_bldg', 'address_street', 'address_brgy', 'address_city',
+            'address_bldg', 'address_street',
+            'address_brgy', 'address_city',
             'full_address',
         ]
         extra_kwargs = {
-            # every column is optional in the API
             'industry': {'required': False, 'allow_null': True},
             'address_bldg': {'required': False, 'allow_null': True},
             'address_street': {'required': False, 'allow_null': True},
@@ -157,31 +157,32 @@ class CompanySerializer(serializers.ModelSerializer):
 
     # ---------- bookkeeping helper ------------------
     def _add_bookkeeping(self, validated, *, is_update=False):
-        user = self.context['request'].user
+        user = self.context["request"].user
         names = {f.name for f in Company._meta.fields}
 
-        if 'created_by' in names and not is_update:
-            validated.setdefault('created_by', user)
-        if 'edited_by' in names:
-            validated.setdefault('edited_by', user)
+        if "created_by" in names and not is_update:
+            validated.setdefault("created_by", user)
+        if "edited_by" in names:
+            validated.setdefault("edited_by", user)
 
-        if 'created_at' in names and not is_update:
-            validated.setdefault('created_at', timezone.now())
-        if 'edited_at' in names:
-            validated.setdefault('edited_at', timezone.now())
+        if "created_at" in names and not is_update:
+            validated.setdefault("created_at", timezone.now())
+        if "edited_at" in names:
+            validated.setdefault("edited_at", timezone.now())
         return validated
 
-    # ---------- create / update ----------------------
+    # ---------- create / update ---------------------
     def create(self, validated):
-        validated = self._add_bookkeeping(validated, is_update=False)
-        return super().create(validated)
+        return super().create(self._add_bookkeeping(validated, is_update=False))
 
     def update(self, instance, validated):
-        validated = self._add_bookkeeping(validated, is_update=True)
-        return super().update(instance, validated)
+        return super().update(instance, self._add_bookkeeping(validated, is_update=True))
 
 
 class ContactSerializer(serializers.ModelSerializer):
+    contact_title = serializers.CharField(source='title', required=False, allow_blank=True)
+    contact_position = serializers.CharField(source='position', required=False, allow_blank=True)
+    contact_email = serializers.EmailField(source='email', required=False, allow_blank=True)
     full_name = serializers.ReadOnlyField()
     company_name = serializers.CharField(source='company.name', read_only=True)
 
@@ -194,11 +195,21 @@ class ContactSerializer(serializers.ModelSerializer):
     class Meta:
         model = Contact
         fields = [
-            'id', 'title', 'first_name', 'last_name', 'full_name',
-            'position', 'email', 'phone_number', 'mobile_number',
-            'fax_number', 'notes', 'company', 'company_name',
+            "id", "contact_title", "first_name", "last_name",
+            "full_name", "contact_position", "contact_email",
+            "phone_number", "mobile_number", "fax_number", "notes",
+            "company", "company_name",
         ]
-        read_only_fields = ['full_name', 'company_name']
+        read_only_fields = ("full_name", "company_name")
+        extra_kwargs = {
+            # make the “minor” details optional
+            "contact_position": {"required": False, "allow_blank": True},
+            "contact_email": {"required": False, "allow_blank": True},
+            "phone_number": {"required": False, "allow_blank": True},
+            "mobile_number": {"required": False, "allow_blank": True},
+            "fax_number": {"required": False, "allow_blank": True},
+            "notes": {"required": False, "allow_blank": True},
+        }
 
     def get_contact_type(self, obj):
         # nothing in the table yet – leave the column blank
