@@ -550,12 +550,12 @@ class Company(models.Model):
         'User', on_delete=models.SET_NULL, db_column='created_user_id',
         related_name='+', blank=True, null=True
     )
-    created_at = models.DateTimeField(db_column='created_date', editable=False)
+    created_at = models.DateTimeField(db_column='created_date', blank=True, null=True, auto_now_add=True)
     edited_by = models.ForeignKey(
         'User', on_delete=models.SET_NULL, db_column='edited_user_id',
         related_name='+', blank=True, null=True
     )
-    edited_at = models.DateTimeField(db_column='edited_date')
+    edited_at = models.DateTimeField(db_column='edited_date', blank=True, null=True, auto_now=True)
 
     # meta
     class Meta:

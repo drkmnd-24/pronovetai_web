@@ -1,3 +1,5 @@
+from django.utils import timezone
+
 from rest_framework import serializers
 from django.contrib.auth import password_validation
 from .models import (
@@ -144,6 +146,39 @@ class CompanySerializer(serializers.ModelSerializer):
             'address_bldg', 'address_street', 'address_brgy', 'address_city',
             'full_address',
         ]
+        extra_kwargs = {
+            # every column is optional in the API
+            'industry': {'required': False, 'allow_null': True},
+            'address_bldg': {'required': False, 'allow_null': True},
+            'address_street': {'required': False, 'allow_null': True},
+            'address_brgy': {'required': False, 'allow_null': True},
+            'address_city': {'required': False, 'allow_null': True},
+        }
+
+    # ---------- bookkeeping helper ------------------
+    def _add_bookkeeping(self, validated, *, is_update=False):
+        user = self.context['request'].user
+        names = {f.name for f in Company._meta.fields}
+
+        if 'created_by' in names and not is_update:
+            validated.setdefault('created_by', user)
+        if 'edited_by' in names:
+            validated.setdefault('edited_by', user)
+
+        if 'created_at' in names and not is_update:
+            validated.setdefault('created_at', timezone.now())
+        if 'edited_at' in names:
+            validated.setdefault('edited_at', timezone.now())
+        return validated
+
+    # ---------- create / update ----------------------
+    def create(self, validated):
+        validated = self._add_bookkeeping(validated, is_update=False)
+        return super().create(validated)
+
+    def update(self, instance, validated):
+        validated = self._add_bookkeeping(validated, is_update=True)
+        return super().update(instance, validated)
 
 
 class ContactSerializer(serializers.ModelSerializer):
