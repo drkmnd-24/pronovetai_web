@@ -1,11 +1,15 @@
-from rest_framework import viewsets, generics, permissions
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
+from django.shortcuts import render
 
+from rest_framework import generics, viewsets, permissions, status
+from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.viewsets import ReadOnlyModelViewSet
-
+from rest_framework.response import Response
+from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -21,6 +25,11 @@ from .serializers import (
 )
 
 
+@login_required
+def dashboard_page(request):
+    return render(request, 'dashboard.html')
+
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def dashboard(request):
@@ -34,10 +43,37 @@ def dashboard(request):
     })
 
 
+class LoginView(APIView):
+    authentication_classes = []
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        username = request.data.get('username')
+        password = request.data.get('password')
+        user = authenticate(request, username=username, password=password)
+        if not user:
+            return Response({'detail': 'Invalid Credentials'},
+                            status=status.HTTP_400_BAD_REQUEST)
+        login(request, user)
+        refresh = RefreshToken.for_user(user)
+        return Response({
+            'access': str(refresh.access_token),
+            'refresh': str(refresh),
+        })
+
+
+class LogoutView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        logout(request)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
 class StaffRegistrationView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = StaffRegistrationSerializer
-    authentication_classes = [JWTAuthentication]
+    authentication_classes = [SessionAuthentication, JWTAuthentication]
     permission_classes = [IsAuthenticated, IsAdminUser]
 
     def get_serializer_context(self):
@@ -55,11 +91,14 @@ class StaffRegistrationView(generics.CreateAPIView):
 class ManagerRegistrationView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = ManagerRegistrationSerializer
-    authentication_classes = [JWTAuthentication]
+    authentication_classes = [SessionAuthentication, JWTAuthentication]
     permission_classes = [IsAuthenticated, IsAdminUser]
 
     def get_serializer_context(self):
         return {'request': self.request}
+
+
+DEFAULT_AUTH = [SessionAuthentication, JWTAuthentication]
 
 
 class AddressViewSet(viewsets.ModelViewSet):
