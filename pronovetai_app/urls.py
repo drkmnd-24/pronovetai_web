@@ -28,9 +28,8 @@ router.register(r'building-images', BuildingImageViewSet)
 router.register(r'unit-images', UnitImageViewSet)
 
 
-def secure_template(name):
-    view = TemplateView.as_view(template_name=name)
-    return method_decorator(login_required, name='dispatch')(view)
+def secure_template(name: str):
+    return login_required(TemplateView.as_view(template_name=name))
 
 
 urlpatterns = [
@@ -53,7 +52,7 @@ urlpatterns = [
     path("api/dashboard/", dashboard_stats, name="api_dashboard"),
 
     # ── Front-end templates (session required) ──
-    path("", secure_template("login.html"), name="login_page"),
+    path("", TemplateView.as_view(template_name='login.html'), name='login_page'),
     path("dashboard/", dashboard_page, name="dashboard_page"),
     path("buildinglist/", secure_template("building_list.html"), name="building_list"),
     path("unitlist/", secure_template("unit_list.html"), name="unit_list"),
