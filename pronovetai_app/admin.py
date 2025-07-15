@@ -42,9 +42,10 @@ class CustomUserCreationForm(forms.ModelForm):
             "is_staff", "is_superuser", "is_active",
         )
 
-    user_type = forms.CharField(
-        label='User type (id •or• description)',
-        help_text=user_type_help,
+    user_type = forms.ModelChoiceField(
+        queryset=UserType.objects.all(),
+        label='User type',
+        help_text='Pick from the list (add rows in "User types" if empty).',
     )
 
     def clean_password2(self):
