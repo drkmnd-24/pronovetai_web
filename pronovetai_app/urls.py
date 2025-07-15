@@ -1,18 +1,21 @@
 from django.contrib import admin
 from django.urls import path, include
+from django.views.generic import TemplateView
+from django.utils.decorators import method_decorator
+from django.contrib.auth.decorators import login_required
 from rest_framework import routers
 from rest_framework_simplejwt.views import TokenRefreshView
+
 from pronovetai_app.views import (
     AddressViewSet, UserViewSet, CompanyViewSet, ContactViewSet,
     BuildingViewSet, UnitViewSet, ODFormViewSet, BuildingImageViewSet,
-    UnitImageViewSet, StaffRegistrationView, ManagerRegistrationView,
-    CurrentUserLogsView, ChangePasswordView, dashboard
+    UnitImageViewSet,
+
+    StaffRegistrationView, ManagerRegistrationView,
+    CurrentUserLogsView, ChangePasswordView,
+
+    LoginView, LogoutView, dashboard_stats, dashboard_page
 )
-
-from .auth_views import CustomTokenObtainPairView
-
-from django.urls import path
-from django.views.generic import TemplateView
 
 router = routers.DefaultRouter()
 router.register(r'addresses', AddressViewSet)
@@ -24,26 +27,37 @@ router.register(r'odforms', ODFormViewSet)
 router.register(r'building-images', BuildingImageViewSet)
 router.register(r'unit-images', UnitImageViewSet)
 
+
+def secure_template(name):
+    view = TemplateView.as_view(template_name=name)
+    return method_decorator(login_required, name='dispatch')(view)
+
+
 urlpatterns = [
-    path('api/', include(router.urls)),
+    # ── DRF router ──────────────────────────────
+    path("api/", include(router.urls)),
 
-    path('api/register/staff', StaffRegistrationView.as_view(), name='staff_registration'),
-    path('api/register/manager', ManagerRegistrationView.as_view(), name='manager_registration'),
+    # ── Auth (session + JWT) ────────────────────
+    path("api/login/", LoginView.as_view(), name="api_login"),
+    path("api/logout/", LogoutView.as_view(), name="api_logout"),
+    path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
 
-    path('api/token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('api/token/refresh', TokenRefreshView.as_view(), name='token_refresh'),
+    # ── User management extras ──────────────────
+    path("api/register/staff/", StaffRegistrationView.as_view(), name="staff_registration"),
+    path("api/register/manager/", ManagerRegistrationView.as_view(), name="manager_registration"),
+    path("api/users/me/", UserViewSet.as_view(), name="current_user"),
+    path("api/users/me/logs/", CurrentUserLogsView.as_view(), name="current_user_logs"),
+    path("api/users/me/change_password/", ChangePasswordView.as_view(), name="change_password"),
 
-    path('api/users/me/', UserViewSet.as_view(), name='current_user'),
-    path('api/users/me/logs', CurrentUserLogsView.as_view(), name='current_user_logs'),
-    path('api/users/me/change_password/', ChangePasswordView.as_view(), name='change_password'),
+    # ── Dashboard counters (JSON) ───────────────
+    path("api/dashboard/", dashboard_stats, name="api_dashboard"),
 
-    path('api/dashboard/', dashboard, name='dashboard'),
-    # ======================= FRONT-END TEMPLATES ================================= #
-    path('', TemplateView.as_view(template_name='login.html'), name='login'),
-    path('dashboard/', TemplateView.as_view(template_name='dashboard.html'), name='dashboard'),
-    path('buildinglist/', TemplateView.as_view(template_name='building_list.html'), name='building_list'),
-    path('unitlist/', TemplateView.as_view(template_name='unit_list.html'), name='unit_list'),
-    path('companylist/', TemplateView.as_view(template_name='company_list.html'), name='company_list'),
-    path('odformlist/', TemplateView.as_view(template_name='odform_list.html'), name='odform_list'),
-    path('contactlist/', TemplateView.as_view(template_name='contact_list.html'), name='contact_list'),
+    # ── Front-end templates (session required) ──
+    path("", secure_template("login.html"), name="login_page"),
+    path("dashboard/", dashboard_page, name="dashboard_page"),
+    path("buildinglist/", secure_template("building_list.html"), name="building_list"),
+    path("unitlist/", secure_template("unit_list.html"), name="unit_list"),
+    path("companylist/", secure_template("company_list.html"), name="company_list"),
+    path("odformlist/", secure_template("odform_list.html"), name="odform_list"),
+    path("contactlist/", secure_template("contact_list.html"), name="contact_list"),
 ]

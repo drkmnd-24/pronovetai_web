@@ -32,7 +32,7 @@ def dashboard_page(request):
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def dashboard(request):
+def dashboard_stats(request):
     return Response({
         'buildings': Building.objects.count(),
         'units': Unit.objects.count(),
@@ -178,8 +178,10 @@ class ODFormViewSet(viewsets.ModelViewSet):
 class BuildingImageViewSet(viewsets.ModelViewSet):
     queryset = BuildingImage.objects.all()
     serializer_class = BuildingImageSerializer
+    authentication_classes = DEFAULT_AUTH
 
 
 class UnitImageViewSet(viewsets.ModelViewSet):
     queryset = UnitImage.objects.all()
     serializer_class = UnitImageSerializer
+    authentication_classes = DEFAULT_AUTH
