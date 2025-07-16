@@ -20,7 +20,10 @@
     }
 
     /* ---- fetch dashboard counters right away ---- */
-    fetch('/api/dashboard/', {headers: {Authorization: `Bearer ${token}`}})
+    fetch('/api/dashboard/', {
+        headers: { Authorization: `Bearer ${token}` },
+        credentials: 'include',
+    })
         .then(r => {
             if (r.status === 401) {
                 localStorage.clear();
