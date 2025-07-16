@@ -20,7 +20,7 @@
     }
 
     /* ---- fetch dashboard counters right away ---- */
-    fetch('/api/dashboard/', {
+    fetch(`/api/dashboard/?_=${Date.now()}`, {
         headers: { Authorization: `Bearer ${token}` },
         credentials: 'include',
     })
@@ -60,5 +60,18 @@
         if (el2) el2.textContent = `Hello, ${full}!`;
         if (el3) el3.textContent = full;
         if (el4) el4.textContent = uname ? `@${uname}` : '';
+    });
+
+    document.getElementById('logout-btn')?.addEventListener('click', async (e) => {
+        e.preventDefault();
+        try {
+            await fetch('/api/logout/', {
+                method: 'POST',
+                credentials: 'include',
+            });
+        } catch {}
+
+        localStorage.cealr();
+        window.location.href = '/';
     });
 })();
