@@ -64,4 +64,31 @@
         localStorage.clear();
         window.location.href = "/";
     });
+
+    /* ---- contacts that expire soon ---- */
+    fetch(`/api/contacts/expiring?_=${Date.now()}`, {
+        headers: {Authorization: `Bearer ${token}`},
+        credentials: "include",
+    })
+        .then(r => r.json())
+        .then(list => {
+            const tbody = document.querySelector("#expire-table tbody");
+            const counter = document.getElementById("expire-count");
+            if (!tbody) return;
+
+            tbody.innerHTML = list.map(r => `
+        <tr>
+          <td><a href="/contactlist/?id=${r.id}">View</a></td>
+          <td>${r.company}</td>
+          <td>${r.location}</td>
+          <td><a href="/buildinglist/?name=${encodeURIComponent(r.building)}">${r.building}</a></td>
+          <td>${r.unit_name}</td>
+          <td>${r.lease_expiry}</td>
+          <td class="text-end">${r.gfa}</td>
+        </tr>
+      `).join("");
+
+            if (counter) counter.textContent = `(${list.length} records)`;
+        })
+        .catch(console.error);
 })();

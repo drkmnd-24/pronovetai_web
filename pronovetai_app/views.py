@@ -26,7 +26,6 @@ from .serializers import (
     UserLogSerializer, ChangePasswordSerializer
 )
 
-
 API_AUTH = [JWTAuthentication, SessionAuthentication]
 
 
@@ -210,11 +209,11 @@ class ExpiringContactView(APIView):
     authentication_classes = API_AUTH
 
     def get(self, request):
-        horizon = now().date() + timedelta(days=183)
+        horizon = now().date() + timedelta(days=183)  # ≈ six months
         units = (
             Unit.objects
-            .filter(lease_expirate_date__range=[now().date(), horizon])
-            .select_ralated('building')
+            .filter(lease_expiry_date__range=[now().date(), horizon])
+            .select_related('building')
             .prefetch_related('contacts', 'contacts__company')
         )
 
@@ -222,13 +221,14 @@ class ExpiringContactView(APIView):
         for unit in units:
             for contact in unit.contacts.all():
                 rows.append({
-                    'id': contact.id,
-                    'company': contact.company.name if contact.company else '',
-                    'location': unit.building.address_city,
-                    'building': unit.building.name,
-                    'unit_name': unit.name,
-                    'lease_expiry': unit.lease_expiry_date.strftime('m/%d/%Y'),
-                    'gfa': f'{unit.gross_floor_area:,}' if unit.gross_floor_area else '',
+                    "id": contact.id,
+                    "company": contact.company.name if contact.company else "",
+                    "location": unit.building.address_city,
+                    "building": unit.building.name,
+                    "unit_name": unit.name,
+                    "lease_expiry": unit.lease_expiry_date.strftime("%m/%d/%Y"),
+                    "gfa": f"{unit.gross_floor_area:,}" if unit.gross_floor_area else "",
                 })
-        rows.sort(key=lambda r: r['lease_expiry'])
+
+        rows.sort(key=lambda r: r["lease_expiry"])
         return Response(rows)

@@ -193,6 +193,30 @@
                         </div>
                     </div>
                     <div class="row">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h4>Contacts to Expire <span id="expire-count" class="small text-muted"></span></h4>
+                                </div>
+                                <div class="card-body table-responsive">
+                                    <table id="expire-table" class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Action</th>
+                                                <th>Company Name (Tenant)</th>
+                                                <th>Location</th>
+                                                <th>Building Name</th>
+                                                <th>Unit Name</th>
+                                                <th>Lease Expiry</th>
+                                                <th class="text-end">Unit GFA</th>
+                                            </tr>
+                                        </thead>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
                         <div class="col-12 col-xl-4">
                             <div class="card">
                                 <div class="card-header">
@@ -386,7 +410,7 @@
 <script src="{% static '/assets/extensions/apexcharts/apexcharts.min.js' %}"></script>
 <script src="{% static '/assets/static/js/pages/dashboard.js' %}"></script>
 
-<script src="{% static 'js_function/dashboard.js' %}"></script>
+<script src="{% static 'js_function/dashboard.js' %}?v=2"></script>
 </body>
 
 </html>

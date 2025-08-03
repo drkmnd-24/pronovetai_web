@@ -52,7 +52,7 @@ urlpatterns = [
     path("api/dashboard/", dashboard_stats, name="api_dashboard"),
 
     # ── Back-end Routes ──────────────────
-    path('api/contacts/expiring/', ExpiringContactView.as_view(), name='contacts_expiring'),
+    path("api/contacts/expiring", ExpiringContactView.as_view()),
 
     # ── Front-end templates (session required) ──
     path("", TemplateView.as_view(template_name='login.html'), name='login_page'),
