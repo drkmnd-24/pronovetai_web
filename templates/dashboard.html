@@ -70,33 +70,18 @@
                             <a href="#" data-bs-toggle="dropdown" aria-expanded="false">
                                 <div class="user-menu d-flex">
                                     <div class="user-name text-end me-3">
-                                        <h6 id="navbar-fullname" class="mb-0 text-gray-600">
-                                            {{ request.user.get_full_name|default:request.user.username }}
-                                        </h6>
+                                        <!-- will be filled by JS -->
+                                        <h6 id="navbar-fullname" class="mb-0 text-gray-600">…</h6>
                                     </div>
                                     <div class="user-img d-flex align-items-center">
                                         <div class="avatar avatar-md">
-                                            <img src="{% static '/assets/compiled/jpg/1.jpg' %}">
-                                        </div>
-                                        <div class="ms-3 name">
-                                            <h5 id="card-fullname" class="font-bold">
-                                                {{ request.user.get_full_name|default:"User" }}
-                                            </h5>
-                                            <h6 id="card-username" class="text-muted mb-0">
-                                                @{{ request.user.username }}
-                                            </h6>
+                                            <img src="{% static '/assets/compiled/jpg/1.jpg' %}" alt="">
                                         </div>
                                     </div>
                                 </div>
                             </a>
-                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton"
-                                style="min-width: 11rem;">
-                                <li>
-                                <li>
-                                    <h6 id="dropdown-greeting" class="dropdown-header">
-                                        Hello, {{ request.user.get_full_name|default:request.user.username }}!
-                                    </h6>
-                                </li>
+                            <ul class="dropdown-menu dropdown-menu-end" style="min-width:11rem;">
+                                <li><h6 id="dropdown-greeting" class="dropdown-header">Hello!</h6></li>
                                 </li>
                                 <li><a class="dropdown-item" href="#"><i class="icon-mid bi bi-person me-2"></i> My
                                     Profile</a></li>
@@ -327,11 +312,11 @@
                         <div class="card-body py-4 px-4">
                             <div class="d-flex align-items-center">
                                 <div class="avatar avatar-xl">
-                                    <img src="{% static '/assets/static/images/faces/1.jpg' %}" alt="Face 1">
+                                    <img src="{% static '/assets/static/images/faces/1.jpg' %}" alt="">
                                 </div>
                                 <div class="ms-3 name">
-                                    <h5 class="font-bold">{{ request.user.get_full_name|default:"User" }}</h5>
-                                    <h6 class="text-muted mb-0">@johnducky</h6>
+                                    <h5 id="card-fullname" class="font-bold">…</h5>
+                                    <h6 id="card-username" class="text-muted mb-0">@…</h6>
                                 </div>
                             </div>
                         </div>

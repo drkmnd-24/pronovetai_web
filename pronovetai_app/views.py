@@ -56,8 +56,15 @@ class LoginView(APIView):
                             status=status.HTTP_400_BAD_REQUEST)
         login(request, user)
         refresh = RefreshToken.for_user(user)
+        access = refresh.access_token
+
+        access['username'] = user.username
+        access['user_login'] = user.username
+        access['first_name'] = user.first_name or ''
+        access['last_name'] = user.last_name or ''
+
         return Response({
-            'access': str(refresh.access_token),
+            'access': str(access),
             'refresh': str(refresh),
         })
 
@@ -83,9 +90,17 @@ class StaffRegistrationView(generics.CreateAPIView):
         resp = super().create(request, *args, **kwargs)
         user = self.get_serializer().instance
         refresh = RefreshToken.for_user(user)
-        resp.data['access'] = str(refresh.access_token)
-        resp.data['refresh'] = str(refresh)
-        return resp
+        access = refresh.access_token  # a mutable token instance
+
+        access["username"] = user.username
+        access["user_login"] = user.username  # keep your legacy key
+        access["first_name"] = user.first_name or ""
+        access["last_name"] = user.last_name or ""
+
+        return Response({
+            "access": str(access),  # use the customised access token
+            "refresh": str(refresh),
+        })
 
 
 class ManagerRegistrationView(generics.CreateAPIView):

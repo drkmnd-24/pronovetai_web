@@ -53,7 +53,7 @@ urlpatterns = [
 
     # ── Front-end templates (session required) ──
     path("", TemplateView.as_view(template_name='login.html'), name='login_page'),
-    path("dashboard/", dashboard_page, name="dashboard_page"),
+    path("dashboard/", dashboard_page, name="dashboard"),
     path("buildinglist/", secure_template("building_list.html"), name="building_list"),
     path("unitlist/", secure_template("unit_list.html"), name="unit_list"),
     path("companylist/", secure_template("company_list.html"), name="company_list"),
