@@ -9,7 +9,7 @@ from rest_framework_simplejwt.views import TokenRefreshView
 from pronovetai_app.views import (
     AddressViewSet, UserViewSet, CompanyViewSet, ContactViewSet,
     BuildingViewSet, UnitViewSet, ODFormViewSet, BuildingImageViewSet,
-    UnitImageViewSet,
+    UnitImageViewSet, ExpiringContactView,
 
     StaffRegistrationView, ManagerRegistrationView,
     CurrentUserLogsView, ChangePasswordView,
@@ -50,6 +50,9 @@ urlpatterns = [
 
     # ── Dashboard counters (JSON) ───────────────
     path("api/dashboard/", dashboard_stats, name="api_dashboard"),
+
+    # ── Back-end Routes ──────────────────
+    path('api/contacts/expiring/', ExpiringContactView.as_view(), name='contacts_expiring'),
 
     # ── Front-end templates (session required) ──
     path("", TemplateView.as_view(template_name='login.html'), name='login_page'),
