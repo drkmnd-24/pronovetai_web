@@ -72,21 +72,40 @@
     })
         .then(r => r.json())
         .then(list => {
-            const tbody = document.querySelector("#expire-table tbody");
+            const $table = $("#expire-table");
             const counter = document.getElementById("expire-count");
-            if (!tbody) return;
 
-            tbody.innerHTML = list.map(r => `
-        <tr>
-          <td><a href="/contactlist/?id=${r.id}">View</a></td>
-          <td>${r.company}</td>
-          <td>${r.location}</td>
-          <td><a href="/buildinglist/?name=${encodeURIComponent(r.building)}">${r.building}</a></td>
-          <td>${r.unit_name}</td>
-          <td>${r.lease_expiry}</td>
-          <td class="text-end">${r.gfa}</td>
-        </tr>
-      `).join("");
+            /* build rows once – same order as <thead> */
+            const rows = list.map(r => ([
+                `<a href="/contactlist/?id=${r.id}">View</a>`,
+                r.company,
+                r.location,
+                `<a href="/buildinglist/?name=${encodeURIComponent(r.building)}">${r.building}</a>`,
+                r.unit_name,
+                r.lease_expiry,
+                r.gfa,
+            ]));
+
+            /* create or refresh DataTable */
+            if ($.fn.dataTable.isDataTable($table)) {
+                $table.DataTable().clear().rows.add(rows).draw();
+            } else {
+                $table.DataTable({
+                    data: rows,
+                    columns: [
+                        {title: "Action", orderable: false, searchable: false},
+                        {title: "Company Name"},
+                        {title: "Location"},
+                        {title: "Building"},
+                        {title: "Unit Name"},
+                        {title: "Lease Expiry", type: "date"},
+                        {title: "Unit&nbsp;GFA", className: "text-end"},
+                    ],
+                    pageLength: 10,
+                    lengthMenu: [10, 25, 50, 100],
+                    responsive: true
+                });
+            }
 
             if (counter) counter.textContent = `(${list.length} records)`;
         })

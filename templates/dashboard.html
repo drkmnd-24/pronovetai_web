@@ -15,6 +15,7 @@
 
 
     <link rel="shortcut icon" href="{% static 'assets/compiled/svg/favicon.svg' %}" type="image/x-icon">
+    <link rel="stylesheet" href="{% static 'assets/extensions/datatables.net-bs5/css/dataTables.bootstrap5.min.css' %}">
     <link rel="stylesheet" href="{% static 'assets/compiled/css/app.css' %}">
     <link rel="stylesheet" href="{% static 'assets/compiled/css/app-dark.css' %}">
     <link rel="stylesheet" href="{% static 'assets/compiled/css/auth.css' %}">
@@ -199,18 +200,21 @@
                                     <h4>Contacts to Expire <span id="expire-count" class="small text-muted"></span></h4>
                                 </div>
                                 <div class="card-body table-responsive">
-                                    <table id="expire-table" class="table table-striped">
+                                    <table id="expire-table"
+                                           class="table table-striped table-bordered nowrap"
+                                           style="width:100%">
                                         <thead>
-                                            <tr>
-                                                <th>Action</th>
-                                                <th>Company Name (Tenant)</th>
-                                                <th>Location</th>
-                                                <th>Building Name</th>
-                                                <th>Unit Name</th>
-                                                <th>Lease Expiry</th>
-                                                <th class="text-end">Unit GFA</th>
-                                            </tr>
+                                        <tr>
+                                            <th>Action</th>
+                                            <th>Company Name (Tenant)</th>
+                                            <th>Location</th>
+                                            <th>Building Name</th>
+                                            <th>Unit Name</th>
+                                            <th>Lease Expiry</th>
+                                            <th class="text-end">Unit GFA</th>
+                                        </tr>
                                         </thead>
+                                        <tbody></tbody>
                                     </table>
                                 </div>
                             </div>
@@ -409,8 +413,11 @@
 <!-- Need: Apexcharts -->
 <script src="{% static '/assets/extensions/apexcharts/apexcharts.min.js' %}"></script>
 <script src="{% static '/assets/static/js/pages/dashboard.js' %}"></script>
+<script src="{% static 'assets/extensions/jquery/jquery.min.js' %}"></script>
+<script src="{% static 'assets/extensions/datatables.net/js/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'assets/extensions/datatables.net-bs5/js/dataTables.bootstrap5.min.js' %}"></script>
 
-<script src="{% static 'js_function/dashboard.js' %}?v=2"></script>
+<script src="{% static 'js_function/dashboard.js' %}"></script>
 </body>
 
 </html>
