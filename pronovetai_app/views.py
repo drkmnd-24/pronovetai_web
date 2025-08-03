@@ -25,6 +25,9 @@ from .serializers import (
 )
 
 
+API_AUTH = [JWTAuthentication, SessionAuthentication]
+
+
 @login_required
 def dashboard_page(request):
     return render(request, 'dashboard.html')
@@ -155,6 +158,7 @@ class ContactViewSet(viewsets.ModelViewSet):
     queryset = Contact.objects.select_related('company')
     serializer_class = ContactSerializer
     permission_classes = [IsAuthenticated]
+    authentication_classes = API_AUTH
 
 
 class BuildingViewSet(viewsets.ModelViewSet):
