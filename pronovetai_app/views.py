@@ -1,6 +1,8 @@
+from datetime import timedelta
+
+from django.utils.timezone import now
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from django.utils.decorators import method_decorator
 from django.shortcuts import render
 
 from rest_framework import generics, viewsets, permissions, status
@@ -116,9 +118,6 @@ class ManagerRegistrationView(generics.CreateAPIView):
         return {'request': self.request}
 
 
-DEFAULT_AUTH = [SessionAuthentication, JWTAuthentication]
-
-
 class AddressViewSet(viewsets.ModelViewSet):
     queryset = Address.objects.all()
     serializer_class = AddressSerializer
@@ -197,10 +196,39 @@ class ODFormViewSet(viewsets.ModelViewSet):
 class BuildingImageViewSet(viewsets.ModelViewSet):
     queryset = BuildingImage.objects.all()
     serializer_class = BuildingImageSerializer
-    authentication_classes = DEFAULT_AUTH
+    authentication_classes = API_AUTH
 
 
 class UnitImageViewSet(viewsets.ModelViewSet):
     queryset = UnitImage.objects.all()
     serializer_class = UnitImageSerializer
-    authentication_classes = DEFAULT_AUTH
+    authentication_classes = API_AUTH
+
+
+class ExpiringContactView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = API_AUTH
+
+    def get(self, request):
+        horizon = now().date() + timedelta(days=183)
+        units = (
+            Unit.objects
+            .filter(lease_expirate_date__range=[now().date(), horizon])
+            .select_ralated('building')
+            .prefetch_related('contacts', 'contacts__company')
+        )
+
+        rows = []
+        for unit in units:
+            for contact in unit.contacts.all():
+                rows.append({
+                    'id': contact.id,
+                    'company': contact.company.name if contact.company else '',
+                    'location': unit.building.address_city,
+                    'building': unit.building.name,
+                    'unit_name': unit.name,
+                    'lease_expiry': unit.lease_expiry_date.strftime('m/%d/%Y'),
+                    'gfa': f'{unit.gross_floor_area:,}' if unit.gross_floor_area else '',
+                })
+        rows.sort(key=lambda r: r['lease_expiry'])
+        return Response(rows)
