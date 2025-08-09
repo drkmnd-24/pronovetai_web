@@ -5,12 +5,17 @@ djangorestframework==3.16.0
 djangorestframework_simplejwt==5.5.0
 drf-yasg==1.21.10
 inflection==0.5.1
+mysqlclient==2.2.7
 packaging==24.2
 pillow==11.1.0
 PyJWT==2.9.0
+PyMySQL==1.1.1
 pytz==2025.2
 PyYAML==6.0.2
 sqlparse==0.5.3
 typing_extensions==4.13.0
 tzdata==2025.2
 uritemplate==4.1.1
+
+dotenv~=0.9.9
+python-dotenv~=1.1.1

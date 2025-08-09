@@ -11,6 +11,11 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 # import os
 from pathlib import Path
+import os
+
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,12 +25,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-f-6y410=r*3qi#0@&a=#hjs=6l)93_@x8a*_rt8s5$w$$^t0ii"
+SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['pronovetai.com', 'www.pronovetai.com']
 
 AUTH_USER_MODEL = 'pronovetai_app.User'
 
@@ -122,7 +127,7 @@ DATABASES = {
         'ENGINE': 'core.db.backends.mysql',
         'NAME': 'pronovetai_db',
         'USER': 'root',
-        'PASSWORD': 'D3c0d3r24!',
+        'PASSWORD': os.getenv('DB_PASSWORD'),
         'HOST': '127.0.0.1',
         'PORT': '3306',
         'OPTIONS': {
