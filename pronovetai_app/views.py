@@ -2,7 +2,7 @@ from datetime import timedelta
 
 from django.utils.timezone import now
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.shortcuts import render
 
 from rest_framework import generics, viewsets, permissions, status
@@ -30,6 +30,7 @@ API_AUTH = [JWTAuthentication, SessionAuthentication]
 
 
 @login_required
+@user_passes_test(lambda u: u.is_staff)
 def dashboard_page(request):
     return render(request, 'dashboard.html')
 
@@ -61,6 +62,9 @@ class LoginView(APIView):
         login(request, user)
         refresh = RefreshToken.for_user(user)
         access = refresh.access_token
+
+        access['is_staff'] = user.is_staff
+        access['is_superuser'] = user.is_superuser
 
         access['username'] = user.username
         access['user_login'] = user.username
@@ -125,7 +129,7 @@ class AddressViewSet(viewsets.ModelViewSet):
 # This view is used to get the current logged-in user's data.
 class UserViewSet(generics.RetrieveAPIView):
     serializer_class = UserSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsAdminUser]
 
     def get_object(self):
         return self.request.user
