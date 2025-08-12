@@ -52,7 +52,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
 
-    'pronovetai_app',
+    'pronovetai_app.apps.PronovetaiAppConfig',
 ]
 
 REST_FRAMEWORK = {
