@@ -14,7 +14,8 @@ from pronovetai_app.views import (
     StaffRegistrationView, ManagerRegistrationView,
     CurrentUserLogsView, ChangePasswordView,
 
-    LoginView, LogoutView, dashboard_stats, dashboard_page
+    LoginView, LogoutView, dashboard_stats, dashboard_page,
+    AdminUserViewSet
 )
 
 router = routers.DefaultRouter()
@@ -26,6 +27,7 @@ router.register(r'units', UnitViewSet)
 router.register(r'odforms', ODFormViewSet)
 router.register(r'building-images', BuildingImageViewSet)
 router.register(r'unit-images', UnitImageViewSet)
+router.register(r'admin/users', AdminUserViewSet, basename='admin-users')
 
 
 def secure_template(name: str):

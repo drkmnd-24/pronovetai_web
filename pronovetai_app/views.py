@@ -48,6 +48,13 @@ def dashboard_stats(request):
     })
 
 
+class AdminUserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all().order_by('username')
+    serializer_class = UserSerializer
+    authentication_classes = [SessionAuthentication, JWTAuthentication]
+    permission_classes = [IsAuthenticated, IsAdminUser]
+
+
 class LoginView(APIView):
     authentication_classes = []
     permission_classes = [AllowAny]
