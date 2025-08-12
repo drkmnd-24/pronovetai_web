@@ -62,4 +62,5 @@ urlpatterns = [
     path("companylist/", secure_template("company_list.html"), name="company_list"),
     path("odformlist/", secure_template("odform_list.html"), name="odform_list"),
     path("contactlist/", secure_template("contact_list.html"), name="contact_list"),
+    path('userlist/', secure_template('user_list.html'), name='user_list'),
 ]
