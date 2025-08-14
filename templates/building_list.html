@@ -72,6 +72,25 @@
             </section>
             <!-- Basic Tables end -->
         </div>
+        <!-- Logs Modal -->
+        <div class="modal fade" id="logsModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Building Logs</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <ul id="logsList" class="list-group small mb-3"></ul>
+                        <div class="input-group">
+                            <textarea id="logMessage" class="form-control" rows="2"
+                                      placeholder="Add a note…"></textarea>
+                            <button id="addLogBtn" class="btn btn-primary">Add</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
         {% include '_footer.html' %}
     </div>
 </div>
