@@ -54,6 +54,10 @@ class AdminUserViewSet(viewsets.ModelViewSet):
     authentication_classes = [SessionAuthentication, JWTAuthentication]
     permission_classes = [IsAuthenticated, IsAdminUser]
 
+    def perform_destroy(self, instance: User):
+        instance.is_active = False
+        instance.save(update_fields=['is_active'])
+
 
 class LoginView(APIView):
     authentication_classes = []
