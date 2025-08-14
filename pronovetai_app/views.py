@@ -6,12 +6,15 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.shortcuts import render
 
 from rest_framework import generics, viewsets, permissions, status
+
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
+
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -177,6 +180,7 @@ class ContactViewSet(viewsets.ModelViewSet):
 class BuildingViewSet(viewsets.ModelViewSet):
     queryset = Building.objects.all()
     serializer_class = BuildingSerializer
+    parser_classes = (MultiPartParser, FormParser, JSONParser)
 
 
 class UnitPagination(PageNumberPagination):
