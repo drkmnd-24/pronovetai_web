@@ -15,6 +15,7 @@ from .models import (
     Unit,
     ODForm,
     UnitImage,
+    BuildingLog,
 )
 from decimal import InvalidOperation
 
@@ -219,6 +220,20 @@ class BuildingImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = BuildingImage
         fields = "__all__"
+
+
+class BuildingLogSerializer(serializers.ModelSerializer):
+    user_display = serializers.SerializerMethodField()
+    building_id = serializers.IntegerField(source='building_id', read_only=True)
+
+    class Meta:
+        model = BuildingLog
+        fields = ['id', 'building_id', 'message', 'timestamp', 'user_display']
+
+    def get_user_display(self, obj):
+        if obj.user:
+            return (obj.user.get_full_name() or obj.user.username) or str(obj.user.id)
+        return '-'
 
 
 class BuildingSerializer(serializers.ModelSerializer):
