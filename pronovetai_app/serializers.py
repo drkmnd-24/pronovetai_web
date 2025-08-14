@@ -1,7 +1,7 @@
 from django.utils import timezone
-
 from rest_framework import serializers
 from django.contrib.auth import password_validation
+
 from .models import (
     UserType,
     User,
@@ -10,17 +10,20 @@ from .models import (
     Company,
     Contact,
     Building,
+    BuildingType,
+    BuildingImage,
     Unit,
     ODForm,
-    BuildingImage,
     UnitImage,
 )
-from decimal import Decimal, InvalidOperation
+from decimal import InvalidOperation
 
 
+# -----------------------------------------------------------------------------
+# Utilities
+# -----------------------------------------------------------------------------
 class NullableDecimalField(serializers.DecimalField):
     def to_representation(self, value):
-        # catch None or empty‐string
         if value in (None, ""):
             return None
         try:
@@ -29,10 +32,13 @@ class NullableDecimalField(serializers.DecimalField):
             return None
 
 
+# -----------------------------------------------------------------------------
+# Users
+# -----------------------------------------------------------------------------
 class UserTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserType
-        fields = ['id', 'description']
+        fields = ["id", "description"]
 
 
 class StaffRegistrationSerializer(serializers.ModelSerializer):
@@ -42,31 +48,24 @@ class StaffRegistrationSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
-            'username', 'email', 'first_name', 'last_name',
-            'password', 'confirm_password'
+            "username",
+            "email",
+            "first_name",
+            "last_name",
+            "password",
+            "confirm_password",
+            "user_type",  # id or label supported by manager
         ]
 
     def validate(self, data):
-        if data['password'] != data['confirm_password']:
+        if data["password"] != data["confirm_password"]:
             raise serializers.ValidationError("Passwords do not match")
         return data
 
     def create(self, validated_data):
-        validated_data.pop('confirm_password')
-        creator = self.context['request'].user
-        # fetch the “User” user_type
-        user_type = UserType.objects.get(description__iexact='User')
-        # call through your manager, passing created_by
-        user = User.objects.create_user(
-            username=validated_data['username'],
-            password=validated_data['password'],
-            email=validated_data.get('email', ''),
-            first_name=validated_data.get('first_name', ''),
-            last_name=validated_data.get('last_name', ''),
-            user_type=user_type,
-            created_by=creator
-        )
-        return user
+        validated_data.pop("confirm_password")
+        creator = self.context["request"].user
+        return User.objects.create_user(created_by=creator, **validated_data)
 
 
 class ManagerRegistrationSerializer(serializers.ModelSerializer):
@@ -76,37 +75,24 @@ class ManagerRegistrationSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
-            'username', 'email', 'first_name', 'last_name',
-            'password', 'confirm_password'
+            "username",
+            "email",
+            "first_name",
+            "last_name",
+            "password",
+            "confirm_password",
+            "user_type",
         ]
 
     def validate(self, data):
-        if data['password'] != data['confirm_password']:
+        if data["password"] != data["confirm_password"]:
             raise serializers.ValidationError("Passwords do not match")
         return data
 
     def create(self, validated_data):
-        validated_data.pop('confirm_password')
-        creator = self.context['request'].user
-        manager_type = UserType.objects.get(description__iexact='Manager')
-        user = User.objects.create_user(
-            username=validated_data['username'],
-            password=validated_data['password'],
-            email=validated_data.get('email', ''),
-            first_name=validated_data.get('first_name', ''),
-            last_name=validated_data.get('last_name', ''),
-            user_type=manager_type,
-            created_by=creator,
-            is_staff=True
-        )
-        return user
-
-
-class AddressSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Address
-        fields = ['street_address', 'barangay',
-                  'city', ]
+        validated_data.pop("confirm_password")
+        creator = self.context["request"].user
+        return User.objects.create_user(is_staff=True, created_by=creator, **validated_data)
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -114,13 +100,13 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'date_joined', 'user_type']
+        fields = ["id", "username", "email", "first_name", "last_name", "date_joined", "user_type"]
 
 
 class UserLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserLog
-        fields = ['id', 'message', 'timestamp']
+        fields = ["id", "message", "timestamp"]
 
 
 class ChangePasswordSerializer(serializers.Serializer):
@@ -131,9 +117,18 @@ class ChangePasswordSerializer(serializers.Serializer):
         return value
 
     def update(self, instance, validated_data):
-        instance.set_password(validated_data['new_password'])
+        instance.set_password(validated_data["new_password"])
         instance.save()
         return instance
+
+
+# -----------------------------------------------------------------------------
+# Companies / Contacts
+# -----------------------------------------------------------------------------
+class AddressSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Address
+        fields = ["street_address", "barangay", "city"]
 
 
 class CompanySerializer(serializers.ModelSerializer):
@@ -142,36 +137,36 @@ class CompanySerializer(serializers.ModelSerializer):
     class Meta:
         model = Company
         fields = [
-            'id', 'name', 'industry',
-            'address_bldg', 'address_street',
-            'address_brgy', 'address_city',
-            'full_address',
+            "id",
+            "name",
+            "industry",
+            "address_bldg",
+            "address_street",
+            "address_brgy",
+            "address_city",
+            "full_address",
         ]
         extra_kwargs = {
-            'industry': {'required': False, 'allow_null': True},
-            'address_bldg': {'required': False, 'allow_null': True},
-            'address_street': {'required': False, 'allow_null': True},
-            'address_brgy': {'required': False, 'allow_null': True},
-            'address_city': {'required': False, 'allow_null': True},
+            "industry": {"required": False, "allow_null": True},
+            "address_bldg": {"required": False, "allow_null": True},
+            "address_street": {"required": False, "allow_null": True},
+            "address_brgy": {"required": False, "allow_null": True},
+            "address_city": {"required": False, "allow_null": True},
         }
 
-    # ---------- bookkeeping helper ------------------
     def _add_bookkeeping(self, validated, *, is_update=False):
         user = self.context["request"].user
         names = {f.name for f in Company._meta.fields}
-
         if "created_by" in names and not is_update:
             validated.setdefault("created_by", user)
         if "edited_by" in names:
             validated.setdefault("edited_by", user)
-
         if "created_at" in names and not is_update:
             validated.setdefault("created_at", timezone.now())
         if "edited_at" in names:
             validated.setdefault("edited_at", timezone.now())
         return validated
 
-    # ---------- create / update ---------------------
     def create(self, validated):
         return super().create(self._add_bookkeeping(validated, is_update=False))
 
@@ -180,29 +175,34 @@ class CompanySerializer(serializers.ModelSerializer):
 
 
 class ContactSerializer(serializers.ModelSerializer):
-    contact_title = serializers.CharField(source='title', required=False, allow_blank=True)
-    contact_position = serializers.CharField(source='position', required=False, allow_blank=True)
-    contact_email = serializers.EmailField(source='email', required=False, allow_blank=True)
-    full_name = serializers.ReadOnlyField()
-    company_name = serializers.CharField(source='company.name', read_only=True)
+    contact_title = serializers.CharField(source="title", required=False, allow_blank=True)
+    contact_position = serializers.CharField(source="position", required=False, allow_blank=True)
+    contact_email = serializers.EmailField(source="email", required=False, allow_blank=True)
 
-    company = serializers.PrimaryKeyRelatedField(
-        queryset=Company.objects.all(),
-        required=False,
-        allow_null=True
-    )
+    full_name = serializers.ReadOnlyField()
+    company_name = serializers.CharField(source="company.name", read_only=True)
+
+    company = serializers.PrimaryKeyRelatedField(queryset=Company.objects.all(), required=False, allow_null=True)
 
     class Meta:
         model = Contact
         fields = [
-            "id", "contact_title", "first_name", "last_name",
-            "full_name", "contact_position", "contact_email",
-            "phone_number", "mobile_number", "fax_number", "notes",
-            "company", "company_name",
+            "id",
+            "contact_title",
+            "first_name",
+            "last_name",
+            "full_name",
+            "contact_position",
+            "contact_email",
+            "phone_number",
+            "mobile_number",
+            "fax_number",
+            "notes",
+            "company",
+            "company_name",
         ]
         read_only_fields = ("full_name", "company_name")
         extra_kwargs = {
-            # make the “minor” details optional
             "contact_position": {"required": False, "allow_blank": True},
             "contact_email": {"required": False, "allow_blank": True},
             "phone_number": {"required": False, "allow_blank": True},
@@ -211,66 +211,126 @@ class ContactSerializer(serializers.ModelSerializer):
             "notes": {"required": False, "allow_blank": True},
         }
 
-    def get_contact_type(self, obj):
-        # nothing in the table yet – leave the column blank
-        return ''
+
+# -----------------------------------------------------------------------------
+# Buildings (note: building_type is varchar on the building; we expose description)
+# -----------------------------------------------------------------------------
+class BuildingImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BuildingImage
+        fields = "__all__"
 
 
 class BuildingSerializer(serializers.ModelSerializer):
-    # pull the *computed* property from the model
     grade_desc = serializers.ReadOnlyField()
-    # plain code (“SPA”, …)
-    grade = serializers.CharField()
+    building_type_desc = serializers.SerializerMethodField()
+
+    # Image helpers: allow upload to pt_building_images and expose a URL back
+    main_image = serializers.ImageField(write_only=True, required=False)
+    main_image_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Building
         fields = [
-            "id", "name", "grade", "grade_desc",
-            "is_peza_certified", "is_strata",
+            "id",
+            "name",
+            "marketing_status",
+            "grade",
+            "grade_desc",
+            "building_type",
+            "building_type_desc",
+            "peza",
+            "strata",
+            "year_built",
+            "address_street",
+            "address_brgy",
             "address_city",
+            "address_zip",
+            "total_levels",
+            "plate_area",
+            "f2ch",
+            "parking_count",
+            "parking_level",
+            "pass_lift",
+            "service_lift",
+            "ac_type",
+            "ac_op_hours",
+            "ac_ext_hours",
+            "ac_op_charge",
+            "ac_ext_charge",
+            "ps_backup",
+            "ps_desc",
+            "notes",
+            "sale_price_php",
+            "lot_area",
+            "far",
+            "gfa",
+            "gla",
+            "office_rent",
+            "rent_1",
+            "rent_2",
+            "assoc_dues",
+            # image helpers
+            "main_image",
+            "main_image_url",
         ]
 
+    def get_building_type_desc(self, obj):
+        row = BuildingType.objects.filter(code=obj.building_type).first()
+        return row.description if row else None
+
+    def get_main_image_url(self, obj):
+        img = obj.images.order_by("id").first()
+        return img.image.url if img and getattr(img.image, "url", None) else None
+
     def create(self, validated_data):
-        addr_data = validated_data.pop('address', None)
+        image = validated_data.pop("main_image", None)
         building = super().create(validated_data)
-        if addr_data:
-            building.address = Address.objects.create(**addr_data)
-            building.save()
+        if image:
+            BuildingImage.objects.create(building=building, image=image)
         return building
 
     def update(self, instance, validated_data):
-        addr_data = validated_data.pop('address', None)
-        if addr_data:
-            if instance.address_id:
-                for k, v in addr_data.items():
-                    setattr(instance.address, k, v)
-                instance.address.save()
-            else:
-                instance.address = Address.objects.create(**addr_data)
-        return super().update(instance, validated_data)
+        image = validated_data.pop("main_image", None)
+        building = super().update(instance, validated_data)
+        if image:
+            BuildingImage.objects.create(building=building, image=image)
+        return building
 
 
+# -----------------------------------------------------------------------------
+# Units & OD Forms
+# -----------------------------------------------------------------------------
 class UnitSerializer(serializers.ModelSerializer):
-    building_name = serializers.CharField(
-        source="building.name", read_only=True
-    )
-    marketing_status_display = serializers.SerializerMethodField()
-    vacancy_status_display = serializers.SerializerMethodField()
+    building_name = serializers.CharField(source="building.name", read_only=True)
 
     class Meta:
         model = Unit
         fields = (
-            "id", "name", "building_name", "floor",
-            "marketing_status", "marketing_status_display",
-            "vacancy_status", "vacancy_status_display",
+            "id",
+            "name",
+            "building",
+            "building_name",
+            "floor",
+            "marketing_status",
+            "vacancy_status",
             "foreclosed",
+            "gross_floor_area",
+            "net_floor_area",
+            "floor_to_ceiling_height",
+            "lease_commencement_date",
+            "lease_expiry_date",
+            "asking_rent",
+            "allocated_parking_slot",
+            "price_per_parking_slot",
+            "minimum_period",
+            "escalation_rate",
+            "rent_free",
+            "dues",
+            "sale_price_office",
+            "sale_price_parking",
+            "notes",
         )
-
-    def get_marketing_status_display(self, obj):
-        return obj.get_marketing_status_display()
-
-    def get_vacancy_status_display(self, obj):
-        return obj.get_vacancy_status_display()
 
 
 class ODFormSerializer(serializers.ModelSerializer):
@@ -281,36 +341,16 @@ class ODFormSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ODForm
-        fields = '__all__'
-        read_only_fields = (
-            'account_manager', 'created_by', 'created_date',
-            'edited_by', 'edited_date',  # ← here
-        )
+        fields = "__all__"
+        read_only_fields = ("account_manager", "created_by", "created_date", "edited_by", "edited_date")
 
     def validate(self, data):
+        # Use model.clean for cross-field rules
         ODForm(**data).clean()
         return data
-
-    def validate_contact(self, value):
-        if value is None:
-            raise serializers.ValidationError('Select a contact (caller)')
-        raise value
-
-
-class NullableZeroDecimalField(serializers.DecimalField):
-    def to_representation(self, value):
-        if value == 0:
-            return None
-        return super().to_representation(value)
-
-
-class BuildingImageSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = BuildingImage
-        fields = '__all__'
 
 
 class UnitImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = UnitImage
-        fields = '__all__'
+        fields = "__all__"
