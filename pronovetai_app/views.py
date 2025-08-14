@@ -20,13 +20,13 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import (
     Address, User, Company, Contact, Building, Unit, ODForm,
-    BuildingImage, UnitImage
+    BuildingImage, UnitImage, BuildingLog,
 )
 from .serializers import (
     AddressSerializer, UserSerializer, CompanySerializer, ContactSerializer,
     BuildingSerializer, UnitSerializer, ODFormSerializer, BuildingImageSerializer,
     UnitImageSerializer, StaffRegistrationSerializer, ManagerRegistrationSerializer,
-    UserLogSerializer, ChangePasswordSerializer
+    UserLogSerializer, ChangePasswordSerializer, BuildingLogSerializer,
 )
 
 API_AUTH = [JWTAuthentication, SessionAuthentication]
@@ -181,6 +181,28 @@ class BuildingViewSet(viewsets.ModelViewSet):
     queryset = Building.objects.all()
     serializer_class = BuildingSerializer
     parser_classes = (MultiPartParser, FormParser, JSONParser)
+
+
+class BuildingLogListCreateView(generics.ListCreateAPIView):
+    serializer_class = BuildingLogSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        bldg_id = self.kwargs['building_id']
+        return BuildingLog.objects.select_related('user').filter(building_id=bldg_id)
+
+    def perform_create(self, serializer):
+        bldg_id = self.kwargs['building_id']
+        serializer.save(building_id=bldg_id, user=self.request.user)
+
+
+class BuildingLogDestroyView(generics.DestroyAPIView):
+    serializer_class = BuildingLogSerializer
+    permission_classes = [IsAdminUser]
+
+    def get_queryset(self):
+        bldg_id = self.kwargs['building_id']
+        return BuildingLog.objects.filter(building_id=bldg_id)
 
 
 class UnitPagination(PageNumberPagination):
