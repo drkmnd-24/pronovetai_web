@@ -372,6 +372,27 @@ class Building(models.Model):
         return row.description if row else None
 
 
+class BuildingLog(models.Model):
+    id = models.BigAutoField(primary_key=True, db_column='id')
+    building = models.ForeignKey(
+        Building, on_delete=models.CASCADE, related_name='logs', db_column='building_id'
+    )
+    user = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True, related_name='+', db_column='user_id'
+    )
+    message = models.TextField()
+    timestamp = MyDateTimeField(db_column='timestamp', default=timezone.now)
+
+    class Meta:
+        db_table = 'pt_building_logs'
+        managed = False
+        ordering = ['-timestamp']
+
+    def __str__(self):
+        who = (self.user.get_full_name() or self.user.username) if self.user else 'Someone'
+        return f'[{self.timestamp}] {who}: {self.message[:40]}'
+
+
 class Unit(models.Model):
     id = models.BigAutoField(primary_key=True, db_column="unit_id")
 
